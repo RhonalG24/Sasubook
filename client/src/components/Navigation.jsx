@@ -11,6 +11,9 @@ export function Navigation(){
             <button className='text-slate-100'>
                 <Link to='/users-create'>Crear usuario</Link>
             </button>
+            <button className='text-slate-100'>
+                <Link to='/upload_pdf'>Subir PDF</Link>
+            </button>
         </div>
     )
 }
