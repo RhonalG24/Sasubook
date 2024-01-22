@@ -38,6 +38,12 @@ export const uploadFile = async (file) => {
 //     }
 // }
 
+export const getVoices = async () => {
+    const response = await axios.get('http://localhost:8000/sasubook/api/v1/convert_pdf_to_audio/', null, {} )
+    // console.log(response.data)
+    return response.data
+}
+
 export const convertPDFToAudio = async (data) => {
     const formData = new FormData();
     formData.append('pdf', data.pdfFile[0]);
@@ -45,7 +51,7 @@ export const convertPDFToAudio = async (data) => {
     formData.append('to_page', data.to);
     formData.append('rate', data.rate)
     // formData.append('language', data.language)
-    formData.append('gender', data.gender)
+    formData.append('voice', data.voice)
 
     const response = await axios.post('http://localhost:8000/sasubook/api/v1/convert_pdf_to_audio/', formData, {responseType: 'blob', headers: {'content-type': 'multipart/form-data'}} )
 
@@ -58,8 +64,11 @@ export const convertPDFToAudio = async (data) => {
         const a = document.createElement('a')
         a.href = url
         a.download = 'audio.mp3'
-        var name = data.pdfFile[0].name.split('.')
-        a.download = `${name[0]}.mp3`
+        // var name = data.pdfFile[0].name.split('.') //funciona
+        let fileName = data.pdfFile[0].name
+        let lastDot = fileName.lastIndexOf('.')
+        var audioFileName = fileName.substring(0, lastDot)
+        a.download = `${audioFileName}.mp3`
         a.click()
     }else{
         console.log("No hay data para guardar")

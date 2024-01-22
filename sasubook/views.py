@@ -24,17 +24,44 @@ class UserFilesView(viewsets.ModelViewSet):
 
 from .serializer import PDFSerializer
 from django.http import FileResponse, HttpResponse
+import json
 
 def get_voices():
-        engine = pyttsx3.init()
-        voices = engine.getProperty('voices')
-        return voices
+    engine = pyttsx3.init()
+    voices = engine.getProperty('voices')
+    
+    
+    
+    # string_voices = str(voices)
+    
+    # json_voices = json.dumps(string_voices)
+    # print(json_voices)
+    # return json_voices
+
+
+    print(type(voices))
+    my_voices = list()
+    for voice in voices:
+        my_voices.append({"name": f'{voice.name}', "id": f'{voice.id}'})
+        print(voice.name)
+    return json.dumps(my_voices)
 
 class ConvertPDFToAudio(APIView):
-    def get_voices(self, request):
-        engine = pyttsx3.init()
-        voices = engine.getProperty('voices')
-        return voices
+    def get(self, request, *args, **kwargs):
+        
+        # response = HttpResponse(content_type='application/json')
+        response = HttpResponse()
+        response.content = get_voices()
+        # voices = get_voices()
+        
+        return response
+        
+    # def get_voices(self):
+    #     engine = pyttsx3.init()
+    #     voices = engine.getProperty('voices')
+    #     response = HttpResponse()
+    #     response.content = voices
+    #     return response
         
     def post(self, request):
         serializer = PDFSerializer(data=request.data)
@@ -46,7 +73,7 @@ class ConvertPDFToAudio(APIView):
             to_page = serializer.validated_data['to_page'] # no le resto uno porque el range es "hasta sin incluir"
             rate = int(serializer.validated_data['rate'])
             # language = serializer.validated_data['language']
-            gender = int(serializer.validated_data['gender'])
+            voice_selected = serializer.validated_data['voice']
             
             print(from_page) # funciona
             print(to_page) # funciona
@@ -77,10 +104,16 @@ class ConvertPDFToAudio(APIView):
 
             # print(text_to_read)
             
-            text_worked = text.replace('.', '. \n' )
+            text_worked = text.replace('\n-', '\n' )
+            text_worked = text_worked.replace('\n', ' \n' )
+            # text_worked = text_worked.replace('.', '. \n' )
             text_worked = text_worked.replace(' -', ', ' )
-            text_worked = text_worked.replace('-', ' ' )
+            text_worked = text_worked.replace('-', ',' )
             text_worked = text_worked.replace('V ', 'V' )
+            text_worked = text_worked.replace(' ,', ' ' )
+            text_worked = text_worked.replace(',.', '. ' )
+            text_worked = text_worked.replace('.', '. ' )
+            
 
 
             print(text_worked)
@@ -108,6 +141,7 @@ class ConvertPDFToAudio(APIView):
             # else:
             #     engine.setProperty('voice', selected_voice_id)
             engine.setProperty('voice', selected_voice_id)
+            engine.setProperty('voice', voice_selected)
                 
             
             ############################# Generación del archivo de audio #############################
