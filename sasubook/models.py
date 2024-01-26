@@ -17,10 +17,15 @@ class User(models.Model):
     
 class UserFile(models.Model):
     nombre = models.CharField(max_length = 255)
-    fecha_carga = models.DateField(auto_now_add=True)
+    fecha_carga = models.DateTimeField(auto_now_add=True)
     peso = models.CharField(max_length = 50)
     tipo = models.CharField(max_length = 4)
-    url = models.URLField(max_length=255)
+    # archivo = models.FileField(upload_to='pdfs/', blank=True)
+    archivo = models.FileField(upload_to='.\public\generated_files/', blank=True)
+    url = models.URLField(max_length=255, blank=True)
+    id_padre = models.ForeignKey('self', on_delete=models.CASCADE, blank=True)
+    id_usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    # archivo = models.FileField()
     
     def __str__(self) -> str:
         return self.nombre

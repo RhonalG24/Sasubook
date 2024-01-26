@@ -12,3 +12,11 @@ class UserFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserFile
         fields= '__all__'
+        
+class PDFSerializer(serializers.Serializer):
+    pdf = serializers.FileField()
+    from_page = serializers.IntegerField()
+    to_page = serializers.IntegerField()
+    rate = serializers.IntegerField()
+    # language = serializers.CharField()
+    voice = serializers.CharField() # o: male, 1: female

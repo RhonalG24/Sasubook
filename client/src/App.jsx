@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom' 
 import { UsersPage } from './pages/UsersPage/'
 import { UserFormPage } from './pages/UserFormPage/'
+import { UserFileFormPage } from './pages/UserFileFormPage'
 import { Navigation }from './components/Navigation'
 import { Toaster } from 'react-hot-toast'
 
@@ -17,6 +18,7 @@ function App() {
         <Route path='/users' element={ <UsersPage/> } />
         <Route path='/users-create' element={ <UserFormPage/> } />
         <Route path='/users/:id' element={ <UserFormPage/> } />
+        <Route path='/upload_pdf' element={ <UserFileFormPage/> }/>
       </Routes>
       <Toaster/>
     </div>
