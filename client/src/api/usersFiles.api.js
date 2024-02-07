@@ -39,16 +39,27 @@ export const uploadFile = async (file) => {
 // }
 
 export const getVoices = async () => {
-    const response = await axios.get('http://localhost:8000/sasubook/api/v1/convert_pdf_to_audio/', null, {} )
-    // console.log(response.data)
-    return response.data
+    try {
+
+        const response = await axios.get('http://localhost:8000/sasubook/api/v1/convert_pdf_to_audio/', null, {} )
+        // console.log(response.data)
+        // console.log(response)
+        return response.data
+    }catch (error){
+        console.log(error.message)
+        // console.log(error.response)
+        // return error.message
+        return null
+    }
+
+    // axios.interceptors.response.use
 }
 
 export const convertPDFToAudio = async (data) => {
     const formData = new FormData();
     formData.append('pdf', data.pdfFile[0]);
-    formData.append('from_page', data.from);
-    formData.append('to_page', data.to);
+    formData.append('from_page', data.from ? data.from : 1);
+    formData.append('to_page', data.to ? data.to : 9999);
     formData.append('rate', data.rate)
     // formData.append('language', data.language)
     formData.append('voice', data.voice)
