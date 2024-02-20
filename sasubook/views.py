@@ -86,146 +86,153 @@ from django.http import FileResponse, HttpResponse
 import json
 
 def get_voices():
-    engine = pyttsx3.init()
-    voices = engine.getProperty('voices')
+	engine = pyttsx3.init()
+	voices = engine.getProperty('voices')
+	# print(type(voices))
+	my_voices = list()
+	for voice in voices:
+		my_voices.append({"name": f'{voice.name}', "id": f'{voice.id}'})
+		# print(voice.name)
+	return json.dumps(my_voices)
 
-
-
-    # string_voices = str(voices)
-
-    # json_voices = json.dumps(string_voices)
-    # print(json_voices)
-    # return json_voices
-
-
-    print(type(voices))
-    my_voices = list()
-    for voice in voices:
-        my_voices.append({"name": f'{voice.name}', "id": f'{voice.id}'})
-        print(voice.name)
-    return json.dumps(my_voices)
+def is_google_doc(metadata):
+	return 'Google' in metadata.producer
 
 class ConvertPDFToAudio(APIView):
-    def get(self, request, *args, **kwargs):
+	def get(self, request, *args, **kwargs):
 
-        # response = HttpResponse(content_type='application/json')
-        response = HttpResponse()
-        response.content = get_voices()
-        # voices = get_voices()
+		# response = HttpResponse(content_type='application/json')
+		response = HttpResponse()
+		response.content = get_voices()
+		# voices = get_voices()
 
-        return response
+		return response
 
-    # def get_voices(self):
-    #     engine = pyttsx3.init()
-    #     voices = engine.getProperty('voices')
-    #     response = HttpResponse()
-    #     response.content = voices
-    #     return response
+	# def get_voices(self):
+	#     engine = pyttsx3.init()
+	#     voices = engine.getProperty('voices')
+	#     response = HttpResponse()
+	#     response.content = voices
+	#     return response
 
-    def post(self, request):
-        serializer = PDFSerializer(data=request.data)
-        xl=win32com.client.Dispatch("Excel.Application",pythoncom.CoInitialize())
-        if serializer.is_valid():
-            pdf_file = serializer.validated_data['pdf']
+	def post(self, request):
+		serializer = PDFSerializer(data=request.data)
+		xl=win32com.client.Dispatch("Excel.Application",pythoncom.CoInitialize())
+		if serializer.is_valid():
+			pdf_file = serializer.validated_data['pdf']
 
-            from_page = serializer.validated_data['from_page'] - 1
-            to_page = serializer.validated_data['to_page'] # no le resto uno porque el range es "hasta sin incluir"
-            rate = int(serializer.validated_data['rate'])
-            # language = serializer.validated_data['language']
-            voice_selected = serializer.validated_data['voice']
+			from_page = serializer.validated_data['from_page'] - 1
+			to_page = serializer.validated_data['to_page'] # no le resto uno porque el range es "hasta sin incluir"
+			rate = int(serializer.validated_data['rate'])
+			# language = serializer.validated_data['language']
+			voice_selected = serializer.validated_data['voice']
 
-            print(from_page) # funciona
-            print(to_page) # funciona
-
-
-            pdf = pypdf.PdfReader(pdf_file)
-            if (to_page)  > len(pdf.pages):
-                to_page = len(pdf.pages)
-            text = str()
-
-            print(len(pdf.pages))
-
-            ############################# Extracción del texto #############################
-            if from_page != None:
-                page_number = from_page
-
-                while page_number < to_page:
-                    text += pdf.pages[page_number].extract_text().strip(' -•■□▢▣▤▥▦▧▨▩▪▫▬▭▮▯▰▱▲△▴▵▶▷▸▹►▻▼▽▾▿◀◁◂◃◄◅◆◇◈◉◊○◌◍◎●◐◑◒◓◔◕◖◗◘◙◚◛◜◝◞◟◠◡◢◣◤◥◦◧◨◩◪◫◬◭◮◯◰◱◲◳◴◵◶◷◸◹◺◻◼◽◾◿') #FUNCIONA
-
-                    page_number += 1
-            else:
-                for page in pdf.pages:
-                    # print(page.extract_text())
-                    # text += page.extract_text() #FUNCIONA
-                    text += page.extract_text().strip(' -•■□▢▣▤▥▦▧▨▩▪▫▬▭▮▯▰▱▲△▴▵▶▷▸▹►▻▼▽▾▿◀◁◂◃◄◅◆◇◈◉◊○◌◍◎●◐◑◒◓◔◕◖◗◘◙◚◛◜◝◞◟◠◡◢◣◤◥◦◧◨◩◪◫◬◭◮◯◰◱◲◳◴◵◶◷◸◹◺◻◼◽◾◿') #FUNCIONA
-
-            # print(text)
-            text_array = text.split()
-            text_to_read = ' '.join(text_array)
-
-            # print(text_to_read)
-
-            text_worked = text.strip(' -•')
-            text_worked = text_worked.replace('\n-', '\n' )
-            text_worked = text_worked.replace('\n', ' \n' )
-            # text_worked = text_worked.replace('.', '. \n' )
-            text_worked = text_worked.replace(' -', ', ' )
-            text_worked = text_worked.replace('-', ',' )
-            text_worked = text_worked.replace('V ', 'V' )
-            text_worked = text_worked.replace(' ,', ' ' )
-            text_worked = text_worked.replace(',.', '. ' )
-            text_worked = text_worked.replace('.', '. ' )
+			print(from_page) # funciona
+			print(to_page) # funciona
 
 
-
-            print(text_worked)
-
-            ############################# Conversion a voz #############################
-            engine = pyttsx3.init()
-            ############################# Set voice #############################
-            # voices = engine.getProperty('voices')
-
-            # selected_voice_id = ''
-            # country = "Mexico"
-            # for voice in voices:
-            #     if country in voice.name:
-            #         # if gender != None:
-            #         #     selected_voice_id = voice[gender].id
-            #         # else:
-            #         selected_voice_id = voice.id
-
-            if rate != None:
-                engine.setProperty('rate', rate)
-
-            # if gender != None:
-            #     engine.setProperty('voice', voices[gender].selected_voice_id)
-            #     engine.setProperty('voice', voices[1].id)
-            # else:
-            #     engine.setProperty('voice', selected_voice_id)
-            # engine.setProperty('voice', selected_voice_id)
-            engine.setProperty('voice', voice_selected)
+			pdf = pypdf.PdfReader(pdf_file)
 
 
-            ############################# Generación del archivo de audio #############################
-            output_file = 'audio_tmp.mp3'
-            engine.save_to_file(text_to_read, output_file)
-            engine.runAndWait()
+			############################# Extracción del metadata #############################
+			meta = pdf.metadata
 
-            ############################# Obteción de los bytes del archivo de audio para retornar #############################
+			print(meta.producer)
 
-            with open(f'./{output_file}', 'rb') as audio_tmp:
-                datos_de_audio = audio_tmp.read()
+			############################# Seteo de la página final #############################
+			if (to_page)  > len(pdf.pages):
+				to_page = len(pdf.pages)
+			text = str()
 
-                response = HttpResponse(content_type= 'audio/mp3')
-                response['Content-Disposition'] = 'attachment; filename="file.mp3"'
+			print(len(pdf.pages))
 
-                response.content = datos_de_audio
+			############################# Extracción del texto #############################
+			if from_page != None:
+				page_number = from_page
 
-            # print(datos_de_audio)
-            print(response)
+				while page_number < to_page:
+					text += pdf.pages[page_number].extract_text().strip(' -•■□▢▣▤▥▦▧▨▩▪▫▬▭▮▯▰▱▲△▴▵▶▷▸▹►▻▼▽▾▿◀◁◂◃◄◅◆◇◈◉◊○◌◍◎●◐◑◒◓◔◕◖◗◘◙◚◛◜◝◞◟◠◡◢◣◤◥◦◧◨◩◪◫◬◭◮◯◰◱◲◳◴◵◶◷◸◹◺◻◼◽◾◿') #FUNCIONA
+					if is_google_doc(meta):
+						text = text.split()
+						text = ' '.join(text)
 
-            # return Response(audio_file, content_type='audio/mpeg')
+					page_number += 1
+			else:
+				for page in pdf.pages:
+					# print(page.extract_text())
+					# text += page.extract_text() #FUNCIONA
+					text += page.extract_text().strip(' -•■□▢▣▤▥▦▧▨▩▪▫▬▭▮▯▰▱▲△▴▵▶▷▸▹►▻▼▽▾▿◀◁◂◃◄◅◆◇◈◉◊○◌◍◎●◐◑◒◓◔◕◖◗◘◙◚◛◜◝◞◟◠◡◢◣◤◥◦◧◨◩◪◫◬◭◮◯◰◱◲◳◴◵◶◷◸◹◺◻◼◽◾◿') #FUNCIONA
+					if is_google_doc(meta):
+						text = text.split()
+						text = ' '.join(text)
 
-            return response
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+			# print(text)  For Google Docs
+			text_array = text.split()
+			text_to_read = ' '.join(text_array)
+
+			# print(text_to_read)
+
+			text_worked = text.strip(' -•')
+			text_worked = text_worked.replace('\n-', '\n' )
+			text_worked = text_worked.replace('\n', ' \n' )
+			# text_worked = text_worked.replace('.', '. \n' )
+			text_worked = text_worked.replace(' -', ', ' )
+			text_worked = text_worked.replace('-', ',' )
+			text_worked = text_worked.replace('V ', 'V' )
+			text_worked = text_worked.replace(' ,', ' ' )
+			text_worked = text_worked.replace(',.', '. ' )
+			text_worked = text_worked.replace('.', '. ' )
+
+
+
+			print(text_worked)
+
+			############################# Conversion a voz #############################
+			engine = pyttsx3.init()
+			############################# Set voice #############################
+			# voices = engine.getProperty('voices')
+
+			# selected_voice_id = ''
+			# country = "Mexico"
+			# for voice in voices:
+			#     if country in voice.name:
+			#         # if gender != None:
+			#         #     selected_voice_id = voice[gender].id
+			#         # else:
+			#         selected_voice_id = voice.id
+
+			if rate != None:
+				engine.setProperty('rate', rate)
+
+			# if gender != None:
+			#     engine.setProperty('voice', voices[gender].selected_voice_id)
+			#     engine.setProperty('voice', voices[1].id)
+			# else:
+			#     engine.setProperty('voice', selected_voice_id)
+			# engine.setProperty('voice', selected_voice_id)
+			engine.setProperty('voice', voice_selected)
+
+
+			############################# Generación del archivo de audio #############################
+			output_file = 'audio_tmp.mp3'
+			engine.save_to_file(text_to_read, output_file)
+			engine.runAndWait()
+
+			############################# Obteción de los bytes del archivo de audio para retornar #############################
+
+			with open(f'./{output_file}', 'rb') as audio_tmp:
+				datos_de_audio = audio_tmp.read()
+
+				response = HttpResponse(content_type= 'audio/mp3')
+				response['Content-Disposition'] = 'attachment; filename="file.mp3"'
+
+				response.content = datos_de_audio
+
+			# print(datos_de_audio)
+			print(response)
+
+			# return Response(audio_file, content_type='audio/mpeg')
+
+			return response
+		else:
+			return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
