@@ -1,3 +1,4 @@
+
 import { Link, Navigate } from 'react-router-dom'
 // import  submitLogout from '../App'
 
@@ -21,7 +22,7 @@ export function Navigation(props){
             {/* <Link to='/users' className='font-bold text-3xl mb-4'>
                 <h1>SasuBook</h1>
             </Link> */}
-            <Link to='/' className='font-bold text-3xl mb-4'>
+            <Link to='/user' className='font-bold text-3xl mb-4'>
                 <h1>SasuBook</h1>
             </Link>
             {/* <button className='bg-indigo-500 px-3 py-2 rounded-lg text-slate-100'> */}
@@ -35,7 +36,8 @@ export function Navigation(props){
             </button>
             {/* <button type="submit" className='text-slate-100' onClick={e => submitLogout(e) }> */}
             {/* <button type="submit" className='text-slate-100' onClick={() => { Navigate('/', {state: { logout: 'true'}})} }> */}
-            <button type="submit" className='text-slate-100' onClick={props.submitLogout}>
+            {/* <button type="submit" className='text-slate-100' onClick={props.submitLogout}> */}
+            <button type="submit" className='text-slate-100 bg-gray-950' onClick={props.submitLogout}>
                     Cerrar sesión
             </button>
 
@@ -64,3 +66,5 @@ export function Navigation(props){
 )
 }
 }
+
+

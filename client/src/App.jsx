@@ -208,17 +208,21 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-// import { UsersPage } from './pages/UsersPage/'
+import { UsersPage } from './pages/UsersPage/'
 // import { UserFormPage } from './pages/UserFormPage/'
 import { UserFileFormPage } from './pages/UserFileFormPage'
 import { Navigation }from './components/Navigation'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
+import { show_success_toast, show_error_toast } from './utils/myToast';
 
 import RegisterPage from './pages/Register'
 import LoginPage from './pages/Login'
+import { MatchAllRoute } from './pages/MatchAllRoute';
 import Input from './components/Input';
 import Header from './components/Hearder';
+
+// import { AppUserPage } from './pages/AppUserPage'
 // import Container from 'react-bootstrap/Container';
 // import Navbar from 'react-bootstrap/Navbar';
 // import Button from 'react-bootstrap/Button';
@@ -249,25 +253,6 @@ function App() {
       setCurrentUser(false);
     });
   }, []);
-
-  function show_success_toast(message){
-    setTimeout(() =>{
-      
-      toast.success(message, {position: "bottom-right", style: {
-        background: "#101010",
-        color: "white"
-      }})
-    }, 1)
-  }
-
-  function show_error_toast(message){
-    setTimeout(() => {
-      toast.error(message, {position: "bottom-right", style: {
-        background: "#101010",
-        color: "white"
-      }})
-    } ,500)
-  }
 
   function update_form_btn() {
     if (registrationToggle) {
@@ -375,10 +360,13 @@ function App() {
                   <Routes>
                     {/* <Route path="/" element={<LoginPage/>} />
                     <Route path="/register" element={<RegisterPage/>} /> */}
+                    <Route path='/user'element={ <UsersPage/> }/>
                     <Route path='/convert_pdf' element={ <UserFileFormPage/> }/>
+                    <Route path="*" element={<MatchAllRoute />} />
                   </Routes>
                   <div className="center w-full">
                     <h2>¡Sesión iniciada! Usuario: {email}</h2>
+                    {/* {console.log(axios.get('http://127.0.0.1:8000/sasubook/user'))} */}
                   </div>
                   <Toaster/>
               </BrowserRouter>
