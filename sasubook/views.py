@@ -5,9 +5,13 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, permissions, viewsets
+from sasubook.utils.auth.auth import create_token, get_payload, get_payload_from_GET_request
+
+from sasubook_api.settings import SECRET_KEY
 
 # from .serializer import UserSerializer, UserFileSerializer, UserRegisterSerializer, UserLoginSerializer
-from .serializer import UserSerializer, UserRegisterSerializer, UserLoginSerializer
+from .serializers import AppUserSerializer, JWTSerializer, UserPdfFileSerializer
+# from .serializers import AppUserSerializer, UserSerializer, UserRegisterSerializer, UserLoginSerializer
 # from .models import User, UserFile
 from .validations import custom_validation, validate_email, validate_password
 
@@ -20,58 +24,58 @@ import pythoncom
 
 # Create your views here.
 
-class UserRegister(APIView):
-    permission_classes = (permissions.AllowAny,)
-    ##
-    def post(self, request):
-        validate_data = custom_validation(request.data)
-        serializer = UserRegisterSerializer(data=validate_data)
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.create(validate_data)
-            if user:
-                return Response(serializer.data, status= status.HTTP_201_CREATED)
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+# class UserRegister(APIView):
+#     permission_classes = (permissions.AllowAny,)
+#     ##
+#     def post(self, request):
+#         validate_data = custom_validation(request.data)
+#         serializer = UserRegisterSerializer(data=validate_data)
+#         if serializer.is_valid(raise_exception=True):
+#             user = serializer.create(validate_data)
+#             if user:
+#                 return Response(serializer.data, status= status.HTTP_201_CREATED)
+#             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-class UserLogin(APIView):
-    permission_classes = (permissions.AllowAny,)
-    authentication_classes = (SessionAuthentication,)
-    ##
-    def post(self, request):
-        data = request.data
-        assert validate_email(data)
-        assert validate_password(data)
-        serializer = UserLoginSerializer(data=data)
-        if serializer.is_valid(raise_exception=True):
-            try:
-                user = serializer.check_user(data)
-            # try:
-            except ValidationError as e:
-                return Response(e.message, status=status.HTTP_400_BAD_REQUEST)
+# class UserLogin(APIView):
+#     permission_classes = (permissions.AllowAny,)
+#     authentication_classes = (SessionAuthentication,)
+#     ##
+#     def post(self, request):
+#         data = request.data
+#         assert validate_email(data)
+#         assert validate_password(data)
+#         serializer = UserLoginSerializer(data=data)
+#         if serializer.is_valid(raise_exception=True):
+#             try:
+#                 user = serializer.check_user(data)
+#             # try:
+#             except ValidationError as e:
+#                 return Response(e.message, status=status.HTTP_400_BAD_REQUEST)
 
-            else:
-                login(request, user)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            # except Exception as e:
-            #     return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
-            # # return Response(user, status=status.HTTP_200_OK)
-            # else:
-            #     return Response(serializer.data, status=status.HTTP_200_OK)
+#             else:
+#                 login(request, user)
+#                 return Response(serializer.data, status=status.HTTP_200_OK)
+#             # except Exception as e:
+#             #     return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
+#             # # return Response(user, status=status.HTTP_200_OK)
+#             # else:
+#             #     return Response(serializer.data, status=status.HTTP_200_OK)
 
-class UserLogout(APIView):
-    permission_classes = (permissions.AllowAny,)
-    authentication_classes = ()
-    ##
-    def post(self, request):
-        logout(request)
-        return Response(status=status.HTTP_200_OK)
+# class UserLogout(APIView):
+#     permission_classes = (permissions.AllowAny,)
+#     authentication_classes = ()
+#     ##
+#     def post(self, request):
+#         logout(request)
+#         return Response(status=status.HTTP_200_OK)
 
-class UserView(APIView):
-    permission_classes = (permissions.IsAuthenticated,)
-    authentication_classes = (SessionAuthentication, )
-    ##
-    def get(self, request):
-        serializer = UserSerializer(request.user)
-        return Response({'user': serializer.data}, status=status.HTTP_200_OK)
+# class UserView(APIView):
+#     permission_classes = (permissions.IsAuthenticated,)
+#     authentication_classes = (SessionAuthentication, )
+#     ##
+#     def get(self, request):
+#         serializer = UserSerializer(request.user)
+#         return Response({'user': serializer.data}, status=status.HTTP_200_OK)
 
 # class UserView(viewsets.ModelViewSet):
 #     serializer_class = UserSerializer
@@ -81,7 +85,107 @@ class UserView(APIView):
 #     serializer_class = UserFileSerializer
 #     queryset = UserFile.objects.all()
 
-from .serializer import PDFSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.exceptions import AuthenticationFailed
+# from .serializers import UserSerializer
+from .models import AppUser, UserPdfFile
+import jwt, datetime
+
+
+# Create your views here.
+class RegisterView(APIView):
+    def post(self, request):
+        serializer = AppUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        response = Response()
+        # response.headers({'Access-Control-Allow-Credentials': 'True'})
+        # response['Access-Control-Allow-Origin'] = True
+        # response['Access-Control-Allow-Credentials'] = True
+        response.data = serializer.data
+        # return Response(serializer.data)
+        return response
+
+
+class LoginView(APIView):
+    def post(self, request):
+        email = request.data['email']
+        password = request.data['password']
+
+        user = AppUser.objects.filter(email=email).first()
+
+        if user is None:
+            raise AuthenticationFailed('User not found!')
+
+        if not user.check_password(password):
+            raise AuthenticationFailed('Incorrect password!')
+        
+        token = create_token(user)
+
+        # payload = {
+        #     'id': user.id,
+        #     'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+        #     'iat': datetime.datetime.utcnow()
+        # }
+
+        # # token = jwt.encode(payload, 'secret', algorithm='HS256').decode('utf-8')
+        # # token = jwt.encode(payload, SECRET_KEY, algorithm='HS256').decode('utf-8')
+        # token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+
+        response = Response()
+        # response.headers({'Access-Control-Allow-Credentials': 'True'})
+        # response['Access-Control-Allow-Origin'] = True
+        # response['Access-Control-Allow-Credentials'] = True
+
+        # response.set_cookie(key='jwt', value=token, httponly=True)
+        response.set_cookie(key='jwt', value=token, httponly=True)
+        response.data = {
+            'jwt': token
+        }
+        return response
+
+
+
+class UserView(APIView):
+
+    def get(self, request):
+        # token = request.COOKIES.get('jwt')
+        # print(token)
+
+        # if not token:
+        #     raise AuthenticationFailed('Unauthenticated!')
+
+        # try:
+        #     payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        # except jwt.ExpiredSignatureError:
+        #     raise AuthenticationFailed('Unauthenticated!')
+        
+        # print(request.GET.get('jwt'))
+        ##Funciona
+        
+        try: 
+            payload = get_payload_from_GET_request(request)
+            # payload = get_payload(request)
+        except AuthenticationFailed:
+            raise AuthenticationFailed('Unauthenticated!')
+
+        # user = AppUser.objects.filter(id=payload['id']).first()
+        user = AppUser.objects.filter(id=payload['id']).first()
+        serializer = AppUserSerializer(user)
+        return Response(serializer.data)
+
+
+class LogoutView(APIView):
+    def post(self, request):
+        response = Response()
+        response.delete_cookie('jwt')
+        response.data = {
+            'message': 'success'
+        }
+        return response
+
+from .serializers import PDFSerializer
 from django.http import FileResponse, HttpResponse
 import json
 
@@ -98,24 +202,44 @@ def get_voices():
 def is_google_doc(metadata):
 	return 'Google' in metadata.producer
 
+
+    
+
+class UserFilesView(viewsets.ModelViewSet):
+    serializer_class = UserPdfFileSerializer
+    queryset = UserPdfFile.objects.all()
+
 class ConvertPDFToAudio(APIView):
 	def get(self, request, *args, **kwargs):
 
-		# response = HttpResponse(content_type='application/json')
-		response = HttpResponse()
+		response = HttpResponse(content_type='application/json')
 		response.content = get_voices()
-		# voices = get_voices()
 
 		return response
 
-	# def get_voices(self):
-	#     engine = pyttsx3.init()
-	#     voices = engine.getProperty('voices')
-	#     response = HttpResponse()
-	#     response.content = voices
-	#     return response
+	def post(self, request, *args, **kwargs):
+		try:
+			payload = get_payload(request)
+		except AuthenticationFailed:
+			raise AuthenticationFailed('Unauthenticated!')
 
-	def post(self, request):
+		# print(f'request: ')
+		# # token = request.COOKIES.get('jwt')
+		# jwtSerializer = JWTSerializer(data=request.data)
+		# if jwtSerializer.is_valid():
+      
+		# 	token = jwtSerializer.validated_data['jwt']
+		# 	print(token)
+
+		# 	if not token:
+		# 		raise AuthenticationFailed('Unauthenticated!')
+
+		# 	try:
+		# 		payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+		# 	except jwt.ExpiredSignatureError:
+		# 		raise AuthenticationFailed('Unauthenticated!')
+		print(f'payload: {payload["id"]}')
+
 		serializer = PDFSerializer(data=request.data)
 		xl=win32com.client.Dispatch("Excel.Application",pythoncom.CoInitialize())
 		if serializer.is_valid():
@@ -124,12 +248,14 @@ class ConvertPDFToAudio(APIView):
 			from_page = serializer.validated_data['from_page'] - 1
 			to_page = serializer.validated_data['to_page'] # no le resto uno porque el range es "hasta sin incluir"
 			rate = int(serializer.validated_data['rate'])
-			# language = serializer.validated_data['language']
 			voice_selected = serializer.validated_data['voice']
 
 			print(from_page) # funciona
 			print(to_page) # funciona
 
+			# savePdfSerializer = UserPdfFileSerializer(data=pdf_file)
+			# if savePdfSerializer.is_valid():
+			# 	savePdfSerializer.save()
 
 			pdf = pypdf.PdfReader(pdf_file)
 
@@ -204,12 +330,6 @@ class ConvertPDFToAudio(APIView):
 			if rate != None:
 				engine.setProperty('rate', rate)
 
-			# if gender != None:
-			#     engine.setProperty('voice', voices[gender].selected_voice_id)
-			#     engine.setProperty('voice', voices[1].id)
-			# else:
-			#     engine.setProperty('voice', selected_voice_id)
-			# engine.setProperty('voice', selected_voice_id)
 			engine.setProperty('voice', voice_selected)
 
 

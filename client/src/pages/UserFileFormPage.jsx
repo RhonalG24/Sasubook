@@ -49,32 +49,12 @@ export function UserFileFormPage(){
 
     useEffect( () => {
         async function loadFileOptions() {
-            // const voices = await getVoices().catch( toast.error(
-            //     "Hubo un problema al obtener las posibles voces", 
-            //     {position: "bottom-right", 
-            //     style: {
-            //         background: "#101010",
-            //         color: "fff"
-            //     }}))
-            const voices = await getVoices()
-            // console.log(typeof(voices))
-            // if (voices.contains('Error')){
-            //     toast.error(`Hubo un error al obtener las  voces. ${voices}`)
-            // }
-            console.log(voices)
-            // console.log(JSON.parse(voices))
-            if(voices){
-                setVoices(voices)
-                // let jsonVoices = JSON.stringify(voices)
-                // console.log(jsonVoices)
-                // let jsonVoices = JSON.stringify(voices)
-                // console.log(voices)
-                // for (let voice in voices){
-                //     console.log(voice)
-                // }
 
-                // let voices_json = JSON.parse(voices)
-                // console.log(voices_json)
+            const voices = await getVoices()
+
+            if(voices){
+                console.log(voices)
+                setVoices(voices)
             } else {
                 toast.error(
                     'Hubo un problema al obtener las voces.', 
@@ -85,15 +65,6 @@ export function UserFileFormPage(){
                     }}
                 )
             }
-            // console.log(typeof(voices))
-            // console.log(JSON.stringify(voices))
-            // let voicesParsed = JSON.parse(voices.voice)
-            // console.log(voicesParsed)
-            // for (let voice in voices.id){
-            //     console.log(voice)
-            // }
-            // console.log(voices.voice[1])
-            // console.log('voice:' ,voices.id)
             setValue('rate', 160)
         }
         loadFileOptions()

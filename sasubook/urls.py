@@ -11,9 +11,9 @@ router = routers.DefaultRouter()
 # router.register(r'convert_pdf_to_audio', views.ConvertPDFToAudio, 'convert_pdf_to_audio')
 
 urlpatterns = [
-    path('register/', views.UserRegister.as_view(), name='register'),
-    path('login/', views.UserLogin.as_view(), name='login'),
-    path('logout/', views.UserLogout.as_view(), name='logout'),
+    path('register/', views.RegisterView.as_view(), name='register'),
+    path('login/', views.LoginView.as_view(), name='login'),
+    path('logout/', views.LogoutView.as_view(), name='logout'),
     path('user/', views.UserView.as_view(), name='user'),
     path('api/v1/', include(router.urls)),
     path('docs/', include_docs_urls(title="SasuBook API")),
