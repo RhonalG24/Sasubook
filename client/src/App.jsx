@@ -208,13 +208,15 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { UsersPage } from './pages/UsersPage/'
+// import { UsersPage } from './pages/UsersPage/'
+import { UserPage } from './pages/UserPage/'
 // import { UserFormPage } from './pages/UserFormPage/'
 import { UserFileFormPage } from './pages/UserFileFormPage'
 import { Navigation }from './components/Navigation'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
 import { show_success_toast, show_error_toast } from './utils/myToast';
+import { storage } from './utils/storage';
 
 import RegisterPage from './pages/Register'
 import LoginPage from './pages/Login'
@@ -228,31 +230,35 @@ import Header from './components/Hearder';
 // import Button from 'react-bootstrap/Button';
 // import Form from 'react-bootstrap/Form';
 
-axios.defaults.xsrfCookieName = 'csrftoken';
-axios.defaults.xsrfHeaderName = 'X-CSRFToken';
-axios.defaults.withCredentials = true;
+// axios.defaults.xsrfCookieName = 'csrftoken';
+// axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+// axios.defaults.withCredentials = true;
 
 const client = axios.create({
+  // withCredentials: true,
   baseURL: "http://127.0.0.1:8000/sasubook/"
 });
 
 function App() {
  
-  const [currentUser, setCurrentUser] = useState();
+  const [currentUser, setCurrentUser] = useState(false);
   const [registrationToggle, setRegistrationToggle] = useState(false);
   const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
+  // const [username, setUsername] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+  const jwt = storage.get('auth')
+  // jwt ? setCurrentUser(true) : setCurrentUser(false)
 
-  useEffect(() => {
-    client.get("/user")
-    .then(function(res) {
-      setCurrentUser(true);
-    })
-    .catch(function(error) {
-      setCurrentUser(false);
-    });
-  }, []);
+  // useEffect(() => {
+  //   client.get("/user")
+  //   .then(function(res) {
+  //     setCurrentUser(true);
+  //   })
+  //   .catch(function(error) {
+  //     setCurrentUser(false);
+  //   });
+  // }, []);
 
   function update_form_btn() {
     if (registrationToggle) {
@@ -270,7 +276,8 @@ function App() {
       "/register/",
       {
         email: email,
-        username: username,
+        // username: username,
+        name: name,
         password: password
       }
       ).then(function(res) {
@@ -280,9 +287,12 @@ function App() {
         {
           email: email,
           password: password
-        }
+        },
+        // {withCredentials: true}
       ).then(function(res) {
+        // storage.set('auth', res.data.jwt)
         setCurrentUser(true);
+        storage.set('auth', res.data.jwt)
         show_success_toast("Sesión iniciada con éxito.")
 
       });
@@ -296,18 +306,25 @@ function App() {
       {
         email: email,
         password: password
-      }
+      },
+      // {withCredentials: true}
     ).then(function(res) {
+      // console.log(`res: ${res}`)
+      // console.log(res.data.jwt)
+      storage.set('auth', res.data.jwt)
+      // localStorage.setItem('auth2', res.jwt)
       setCurrentUser(true);
-      console.log(res)
-      setUsername(res.data.username)
+      // console.log(res)
+      // setUsername(res.data.username)
+      setName(res.data.name)
       show_success_toast("Sesión iniciada con éxito.")
     //   toast.success("Sesión iniciada.", {position: "bottom-right", style: {
     //     background: "#101010",
     //     color: "fff"
     // }});
+      // Navigate({to:'/'})
     }).catch(function(res){
-      console.log(res.response.data)
+      // console.log(res.response.data)
       console.log("entró al error")
       show_error_toast("Usuario o contraseña incorrecta")
     });
@@ -317,8 +334,9 @@ function App() {
     e.preventDefault();
     client.post(
       "/logout/",
-      {withCredentials: true}
+      // {withCredentials: true}
     ).then(function(res) {
+      storage.remove('auth')
       setCurrentUser(false);
       show_success_toast("Sesión cerrada con éxito.")
     });
@@ -360,7 +378,7 @@ function App() {
                   <Routes>
                     {/* <Route path="/" element={<LoginPage/>} />
                     <Route path="/register" element={<RegisterPage/>} /> */}
-                    <Route path='/user'element={ <UsersPage/> }/>
+                    <Route path='/user'element={ <UserPage/> }/>
                     <Route path='/convert_pdf' element={ <UserFileFormPage/> }/>
                     <Route path="*" element={<MatchAllRoute />} />
                   </Routes>
@@ -417,16 +435,16 @@ function App() {
                 <form onSubmit={e => submitRegistration(e)}>
                   <div className='flex flex-col w-full'>
                     <label className='self-start'>Dirección de email</label>
-                    <input type='email' placeholder='dirección@email.com' value={email} onChange={e => setEmail(e.target.value)}
+                    <input type='email' placeholder='correo@email.com' value={email} onChange={e => setEmail(e.target.value)}
                     className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'></input>
                   </div>
                   <div className='flex flex-col'>
                     <label className='self-start'>Nombre de usuario</label>
-                    <input type='text' placeholder='Nombre de usuario' value={username} onChange={e => setUsername(e.target.value)} className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'></input>
+                    <input type='text' placeholder='nombre de usuario' value={name} onChange={e => setName(e.target.value)} className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'></input>
                   </div>
                   <div className='flex flex-col'>
                     <label className='self-start'>Contraseña</label>
-                    <input type='password' placeholder='Contraseña' value={password} onChange={e => setPassword(e.target.value)} className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'></input>
+                    <input type='password' placeholder='contraseña' value={password} onChange={e => setPassword(e.target.value)} className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'></input>
                   </div>
                   <button type="submit" className='w-full bg-gray-950'>Registrar</button>
                 </form>
@@ -445,12 +463,12 @@ function App() {
                 <form onSubmit={e => submitLogin(e)}>
                   <div className='flex flex-col w-full'>
                     <label className='self-start'>Dirección de email</label>
-                    <input type='email' placeholder='dirección@email.com' value={email} onChange={e => setEmail(e.target.value)}
+                    <input type='email' placeholder='correo@email.com' value={email} onChange={e => setEmail(e.target.value)}
                     className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'></input>
                   </div>
                   <div className='flex flex-col'>
                     <label className='self-start'>Contraseña</label>
-                    <input type='password' placeholder='Contraseña' value={password} onChange={e => setPassword(e.target.value)} className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'></input>
+                    <input type='password' placeholder='contraseña' value={password} onChange={e => setPassword(e.target.value)} className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'></input>
                   </div>
                   <button type="submit" className='w-full bg-gray-950'>Ingresar</button>
                 </form>

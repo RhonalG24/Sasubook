@@ -1,6 +1,8 @@
 import axios from "axios"
+import { storage } from "../utils/storage"
 
 const usersFilesApi = axios.create({
+    withCredentials: true,
     baseURL: 'http://localhost:8000/sasubook/api/v1/usersFiles/'
 })
 
@@ -55,6 +57,12 @@ export const getVoices = async () => {
     // axios.interceptors.response.use
 }
 
+const getPdfName = (data) => {
+    let fileName = data.pdfFile[0].name
+    let lastDot = fileName.lastIndexOf('.')
+    var audioFileName = fileName.substring(0, lastDot)
+    return audioFileName
+}
 export const convertPDFToAudio = async (data) => {
     const formData = new FormData();
     formData.append('pdf', data.pdfFile[0]);
@@ -63,8 +71,23 @@ export const convertPDFToAudio = async (data) => {
     formData.append('rate', data.rate)
     // formData.append('language', data.language)
     formData.append('voice', data.voice)
+    var audioFileName = getPdfName(data)
+    formData.append('name', audioFileName)
+    formData.append('jwt', storage.get('auth'))
 
-    const response = await axios.post('http://localhost:8000/sasubook/api/v1/convert_pdf_to_audio/', formData, {responseType: 'blob', headers: {'content-type': 'multipart/form-data'}} )
+    // console.log(storage.getcookie('csrftoken'))
+    const csrftoken = storage.getcookie('csrftoken')
+    // console.log(`Datos enviados: ${formData.get('name')}`)
+    const response = await axios.post(
+        'http://localhost:8000/sasubook/api/v1/convert_pdf_to_audio/', 
+        formData, 
+        {   
+            responseType: 'blob', 
+            // headers: {'content-type': 'multipart/form-data', 'X-CSRFToken': storage.getcookie('csrftoken')},
+            headers: {'content-type': 'multipart/form-data', 'X-CSRFToken': csrftoken},
+            withCredentials: true
+        } 
+    )
 
     console.log(response)
     console.log('data:', response.data)
@@ -74,11 +97,11 @@ export const convertPDFToAudio = async (data) => {
         const url = window.URL.createObjectURL(audioBlob);
         const a = document.createElement('a')
         a.href = url
-        a.download = 'audio.mp3'
+        // a.download = 'audio.mp3'
         // var name = data.pdfFile[0].name.split('.') //funciona
-        let fileName = data.pdfFile[0].name
-        let lastDot = fileName.lastIndexOf('.')
-        var audioFileName = fileName.substring(0, lastDot)
+        // let fileName = data.pdfFile[0].name
+        // let lastDot = fileName.lastIndexOf('.')
+        // var audioFileName = fileName.substring(0, lastDot)
         a.download = `${audioFileName}.mp3`
         a.click()
     }else{
