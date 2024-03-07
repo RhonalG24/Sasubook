@@ -1,10 +1,13 @@
 
+import { useContext } from 'react'
 import { Link, Navigate } from 'react-router-dom'
+import UserContext from '../context/UserContext'
 // import  submitLogout from '../App'
 
 // export function Navigation({currentUser, submitLogout}){
 export function Navigation(props){
 
+    const { currentUser } = useContext(UserContext)
     // function submitLogout(e) {
     //     e.preventDefault();
     //     client.post(
@@ -14,7 +17,7 @@ export function Navigation(props){
     //       setCurrentUser(false);
     //     });
     //   }
-    if (props.currentUser){
+    if (currentUser){
 
         return (
             <div className='flex justify-between py-3'>

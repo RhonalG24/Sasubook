@@ -2,7 +2,7 @@ from django.forms import ValidationError
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
 
-from .models import JWT, AppUser, UserPdfFile
+from .models import JWT, AppUser, PdfFile, UserPdfFile
 # from .models import UserFile
 
 # UserModel = get_user_model()
@@ -68,6 +68,11 @@ class UserPdfFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserPdfFile
         fields= '__all__'
+        
+class UploadPdfSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PdfFile
+        fields =  '__all__'
 
 class PDFSerializer(serializers.Serializer):
     pdf = serializers.FileField()

@@ -18,5 +18,9 @@ urlpatterns = [
     path('api/v1/', include(router.urls)),
     path('docs/', include_docs_urls(title="SasuBook API")),
     path('api/v1/convert_pdf_to_audio/', views.ConvertPDFToAudio.as_view(), name='convert_pdf_to_audio'),
+    path('pdf/upload', views.PdfUploadView, name='PdfUploadView'),
+    path("pdfs/", views.PdfListView.as_view(), name="pdf-list-view"),
+    # path("pdfs/<int:pk>/", views.PdfDetailView.as_view(), name="pdf-detail-view"),
+    
     # path('api/v1/tts/voices/', views.get_voices(), name='get_voices')
 ] #Generate GET, POST, PUT, DELETE endpoints

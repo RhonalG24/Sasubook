@@ -1,16 +1,18 @@
 # from django.shortcuts import render
 from django.contrib.auth import get_user_model, login, logout
 from django.forms import ValidationError
+from django.shortcuts import render
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, permissions, viewsets
+from sasubook.forms import UploadPdfForm
 from sasubook.utils.auth.auth import create_token, get_payload, get_payload_from_GET_request
 
 from sasubook_api.settings import SECRET_KEY
 
 # from .serializer import UserSerializer, UserFileSerializer, UserRegisterSerializer, UserLoginSerializer
-from .serializers import AppUserSerializer, JWTSerializer, UserPdfFileSerializer
+from .serializers import AppUserSerializer, JWTSerializer, UploadPdfSerializer, UserPdfFileSerializer
 # from .serializers import AppUserSerializer, UserSerializer, UserRegisterSerializer, UserLoginSerializer
 # from .models import User, UserFile
 from .validations import custom_validation, validate_email, validate_password
@@ -89,7 +91,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 # from .serializers import UserSerializer
-from .models import AppUser, UserPdfFile
+from .models import AppUser, PdfFile, UserPdfFile
 import jwt, datetime
 
 
@@ -208,7 +210,30 @@ def is_google_doc(metadata):
 class UserFilesView(viewsets.ModelViewSet):
     serializer_class = UserPdfFileSerializer
     queryset = UserPdfFile.objects.all()
+    
+def PdfUploadView(request):
+    if request.method == 'POST':
+        form = UploadPdfForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return HttpResponse('The file is saved')
+    else:
+        form = UploadPdfForm()
+        context = {
+			'form': form
+		}
+    return render(request, 'sasubook_templates/UploadPdf.html', context)
 
+from rest_framework import generics
+
+class PdfListView(generics.ListCreateAPIView):
+    queryset = PdfFile.objects.all()
+    serializer_class = UploadPdfSerializer
+    
+# class PdfDetailView(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = PdfFile.objects.all()
+#     serializer_class = UploadPdfSerializer
+    
 class ConvertPDFToAudio(APIView):
 	def get(self, request, *args, **kwargs):
 

@@ -204,7 +204,7 @@
 
 import './App.css';
 import React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
@@ -223,6 +223,7 @@ import LoginPage from './pages/Login'
 import { MatchAllRoute } from './pages/MatchAllRoute';
 import Input from './components/Input';
 import Header from './components/Hearder';
+import UserContext from './context/UserContext';
 
 // import { AppUserPage } from './pages/AppUserPage'
 // import Container from 'react-bootstrap/Container';
@@ -241,13 +242,15 @@ const client = axios.create({
 
 function App() {
  
-  const [currentUser, setCurrentUser] = useState(false);
+  // const [currentUser, setCurrentUser] = useState(false);
   const [registrationToggle, setRegistrationToggle] = useState(false);
-  const [email, setEmail] = useState('');
+  // const [email, setEmail] = useState('');
   // const [username, setUsername] = useState('');
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
+  // const [name, setName] = useState('');
+  // const [password, setPassword] = useState('');
   const jwt = storage.get('auth')
+
+  const { currentUser, setCurrentUser, name, setName, password, setPassword, email, setEmail} = useContext(UserContext)
   // jwt ? setCurrentUser(true) : setCurrentUser(false)
 
   // useEffect(() => {
@@ -373,21 +376,25 @@ function App() {
               </form>
             </div>
                */}
-              <BrowserRouter>
-                <Navigation currentUser={currentUser} submitLogout={submitLogout}/>
-                  <Routes>
-                    {/* <Route path="/" element={<LoginPage/>} />
-                    <Route path="/register" element={<RegisterPage/>} /> */}
-                    <Route path='/user'element={ <UserPage/> }/>
-                    <Route path='/convert_pdf' element={ <UserFileFormPage/> }/>
-                    <Route path="*" element={<MatchAllRoute />} />
-                  </Routes>
-                  <div className="center w-full">
-                    <h2>¡Sesión iniciada! Usuario: {email}</h2>
-                    {/* {console.log(axios.get('http://127.0.0.1:8000/sasubook/user'))} */}
-                  </div>
-                  <Toaster/>
-              </BrowserRouter>
+              {/* <UserContext> */}
+
+                <BrowserRouter>
+                  {/* <Navigation currentUser={currentUser} submitLogout={submitLogout}/> */}
+                  <Navigation submitLogout={submitLogout}/>
+                    <Routes>
+                      {/* <Route path="/" element={<LoginPage/>} />
+                      <Route path="/register" element={<RegisterPage/>} /> */}
+                      <Route path='/user'element={ <UserPage/> }/>
+                      <Route path='/convert_pdf' element={ <UserFileFormPage/> }/>
+                      <Route path="*" element={<MatchAllRoute />} />
+                    </Routes>
+                    <div className="center w-full">
+                      <h2>¡Sesión iniciada! Usuario: {email}</h2>
+                      {/* {console.log(axios.get('http://127.0.0.1:8000/sasubook/user'))} */}
+                    </div>
+                    <Toaster/>
+                </BrowserRouter>
+              {/* </UserContext> */}
             </div>
           </div>
         </div>
