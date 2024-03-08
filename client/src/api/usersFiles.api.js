@@ -63,6 +63,37 @@ const getPdfName = (data) => {
     var audioFileName = fileName.substring(0, lastDot)
     return audioFileName
 }
+
+export const uploadPdfFile = async (data) => {
+    const formData = new FormData();
+    formData.append('file', data.pdfFile[0]);
+    formData.append('title', data.audioFileName)
+    formData.append('jwt', storage.get('auth'))
+
+    //Traer el ID del context cuando se loguee el usuario, para poder enviar de una vez el id del usuario
+    
+    const csrftoken = storage.getcookie('csrftoken')
+    const response = await axios.post(
+        'http://localhost:8000/sasubook/api/v1/convert_pdf_to_audio/', 
+        formData, 
+        {   
+            responseType: 'blob', 
+            // headers: {'content-type': 'multipart/form-data', 'X-CSRFToken': storage.getcookie('csrftoken')},
+            headers: {'content-type': 'multipart/form-data', 'X-CSRFToken': csrftoken},
+            withCredentials: true
+        } 
+    )
+}
+
+/*
+title = models.CharField(max_length=255) 
+    upload_date = models.DateTimeField(auto_now_add=True)
+    size = models.CharField(max_length = 50)
+    file = models.FileField(upload_to=f'{BASE_DIR}/media/pdfs/',
+                            blank=True, 
+                            validators=[FileExtensionValidator(allowed_extensions=['pdf'])])
+    user_id = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
+*/
 export const convertPDFToAudio = async (data) => {
     const formData = new FormData();
     formData.append('pdf', data.pdfFile[0]);
