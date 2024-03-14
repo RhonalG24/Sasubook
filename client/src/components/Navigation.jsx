@@ -1,7 +1,9 @@
 
-import { useContext } from 'react'
-import { Link, Navigate } from 'react-router-dom'
-import UserContext from '../context/UserContext'
+import PropTypes from 'prop-types';
+import { useContext } from 'react';
+import UserContext from '../contexts/UserContext';
+import { Link } from 'react-router-dom'
+
 // import  submitLogout from '../App'
 
 // export function Navigation({currentUser, submitLogout}){
@@ -46,28 +48,32 @@ export function Navigation(props){
 
         </div>
     )
-} else {
-    return (
-        <div className='flex justify-between py-3'>
+    } else {
+        return (
+            <div className='flex justify-between py-3'>
 
-        {/* <Link to='/users' className='font-bold text-3xl mb-4'>
-            <h1>SasuBook</h1>
-        </Link> */}
-        <Link to='/' className='font-bold text-3xl mb-4 w-full'>
-            <h1>SasuBook</h1>
-        </Link>
-        {/* <button className='bg-indigo-500 px-3 py-2 rounded-lg text-slate-100'> */}
-        {/* <button className='text-slate-100'>
-           <Link to='/users-create'>
-                        Crear usuario
-                        </Link>
-        </button> */}
-        {/* <button className='text-slate-100 bg-gray-950'>
-            <Link to='/convert_pdf'>Convertir PDF</Link>
-        </button> */}
-    </div>
-)
+            {/* <Link to='/users' className='font-bold text-3xl mb-4'>
+                <h1>SasuBook</h1>
+            </Link> */}
+                <Link to='/' className='font-bold text-3xl mb-4 w-full'>
+                    <h1>SasuBook</h1>
+                </Link>
+            {/* <button className='bg-indigo-500 px-3 py-2 rounded-lg text-slate-100'> */}
+            {/* <button className='text-slate-100'>
+            <Link to='/users-create'>
+                            Crear usuario
+                            </Link>
+            </button> */}
+            {/* <button className='text-slate-100 bg-gray-950'>
+                <Link to='/convert_pdf'>Convertir PDF</Link>
+            </button> */}
+            </div>
+        )
+    }
 }
+Navigation.propTypes = {
+    currentUser: PropTypes.bool,
+    submitLogout: PropTypes.func
 }
 
 
