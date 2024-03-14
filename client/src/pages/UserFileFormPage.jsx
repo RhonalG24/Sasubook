@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { convertPDFToAudio, getVoices } from '../api/usersFiles.api'
 import toast from 'react-hot-toast'
+import UserContext from '../contexts/UserContext'
 
 // import { useNavigate, useParams } from 'react-router-dom'
 
@@ -9,11 +10,13 @@ export function UserFileFormPage(){
 
     const { register, handleSubmit, formState: { errors }, setValue } = useForm()
     const [ voices, setVoices] = useState([])
+    const {id} = useContext(UserContext)
     // const navigate = useNavigate()
     // const params = useParams()
 
     const onSubmit = handleSubmit( async (data) => {
-        console.log(data)
+        data['id'] = id
+        console.log(`data a enviar del form: ${data.id}`)
 
         // console.log(data.pdfFile[0])
         // for ( const element in data.pdfFile){

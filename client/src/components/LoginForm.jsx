@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import axios from 'axios';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import UserContext from '../contexts/UserContext';
 import { show_success_toast, show_error_toast } from '../utils/myToast';
 import Header from './Hearder';
@@ -15,7 +15,9 @@ const client = axios.create({
 
 function LoginForm(props){
 
-    const { setCurrentUser, email, setEmail, setName, password, setPassword } = useContext(UserContext)
+    const { setCurrentUser, email, setEmail, setId, setName} = useContext(UserContext)
+    const [ password, setPassword ] = useState('');
+
     
     function submitLogin(e) {
         e.preventDefault();
@@ -28,8 +30,11 @@ function LoginForm(props){
         ).then(function(res) {
           storage.set('auth', res.data.jwt)
           setCurrentUser(true);
-
-          setName(res.data.name)
+          // console.log(`Data: ${res.data.user.id}`)
+          // const myUser = res.data.user;
+          setName(res.data.user.name)
+          setId(res.data.user.id)
+          // setEmail(res.data.user.email)
           show_success_toast("Sesión iniciada con éxito.")
         }).catch(function(){
           console.log("entró al error")

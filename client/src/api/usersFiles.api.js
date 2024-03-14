@@ -69,6 +69,7 @@ export const uploadPdfFile = async (data) => {
     formData.append('file', data.pdfFile[0]);
     formData.append('title', data.audioFileName)
     formData.append('jwt', storage.get('auth'))
+    formData.append('id', data.id)
 
     //Traer el ID del context cuando se loguee el usuario, para poder enviar de una vez el id del usuario
     
@@ -119,6 +120,9 @@ export const convertPDFToAudio = async (data) => {
             withCredentials: true
         } 
     )
+    // const uploadStatus = uploadPdfFile(data)
+    // console.log(uploadStatus)
+
 
     console.log(response)
     console.log('data:', response.data)

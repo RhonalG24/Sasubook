@@ -10,11 +10,12 @@ const UserProvider = ({ children }) =>{
     const [ name, setName ] = useState();
     const [ email, setEmail ] = useState('');
     const [ currentUser, setCurrentUser ] = useState(initialCurrentUser);
-    const [ password, setPassword ] = useState('');
+    // const [ password, setPassword ] = useState('');
+    const [ user, setUser] = useState({})
 
 
 
-    const data = { id, setId, name, setName, email, setEmail, currentUser, setCurrentUser, password, setPassword }
+    const data = { id, setId, name, setName, email, setEmail, currentUser, setCurrentUser, user, setUser }
     return <UserContext.Provider value={data}>{children}</UserContext.Provider>
 }
 

@@ -43,7 +43,7 @@ function SasubookApp(){
         client.post(
           "/logout/",
           // {withCredentials: true}
-        ).then(function(res) {
+        ).then(function() {
           storage.remove('auth')
           setCurrentUser(false);
           show_success_toast("Sesión cerrada con éxito.")

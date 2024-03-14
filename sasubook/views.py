@@ -114,6 +114,8 @@ class LoginView(APIView):
         password = request.data['password']
 
         user = AppUser.objects.filter(email=email).first()
+        # print(f'name: {user.name}')
+        # print(f'id: {user.id}')
 
         if user is None:
             raise AuthenticationFailed('User not found!')
@@ -141,8 +143,14 @@ class LoginView(APIView):
         # response.set_cookie(key='jwt', value=token, httponly=True)
         response.set_cookie(key='jwt', value=token, httponly=True)
         response.data = {
-            'jwt': token
+            'jwt': token,
+            'user': {
+				'name': user.name,
+				'id': user.id
+			}
         }
+        
+        # print(response.data)
         return response
 
 
