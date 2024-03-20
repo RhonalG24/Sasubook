@@ -257,15 +257,59 @@ def PdfUploadView(request):
   
 from rest_framework import generics
 
-class PdfListView(generics.ListCreateAPIView):
+class PdfListView(generics.ListCreateAPIView): #retrieve all PDF's
     queryset = PdfFile.objects.all()
     serializer_class = UploadPdfSerializer
     
-class PdfDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = PdfFile.objects.all()
-    serializer_class = UploadPdfSerializer
+class PdfDetailView(generics.RetrieveUpdateDestroyAPIView): #retrieve by PDF's id.
+	serializer_class = UploadPdfSerializer
+	queryset = PdfFile.objects.all()
+	lookup_field = 'id'
+
+	def get_queryset(self):
+		queryset = super().get_queryset()
+		id = self.kwargs.get('id')
+		if id:
+			queryset = queryset.filter(id=id)
+		
+		return queryset
+
+	def perform_destroy(self, instance):
+		instance.file.delete() #delete from storage
+		instance.delete() #delete the object from the database
+
+	def delete(self, request, *args, **kwargs):
+		id = self.kwargs.get('id')
+		file = PdfFile.objects.get(id=id)
+		file.delete()
+		# return super().delete(request, *args, **kwargs)
+  
+class DeletePdfView(generics.DestroyAPIView): #Delete PDF by pdf's id, this also destroy the file
+	serializer_class = UploadPdfSerializer
+	lookup_field = 'id'
+	queryset = PdfFile.objects.all()
+
+	def get_queryset(self):
+		queryset = super().get_queryset()
+		id = self.kwargs.get('id')
+		if id:
+			queryset = queryset.filter(id=id)
+		
+		return queryset
+
+	def perform_destroy(self, instance):
+		instance.file.delete() #delete from storage
+		instance.delete() #delete the object from the database
+
+class PdfListByUserView(generics.ListAPIView): #retrieve a list of PDF's by user_id
+	serializer_class = UploadPdfSerializer
+
+	def get_queryset(self):
+		user_id = self.kwargs.get('user_id')
+		queryset = PdfFile.objects.filter(user_id=user_id)
+		return queryset
     
-class PdfFileView(viewsets.ModelViewSet):
+class PdfFileView(viewsets.ModelViewSet): #retrieve all PDF's
 	serializer_class = UploadPdfSerializer
 	queryset = PdfFile.objects.all()
 
