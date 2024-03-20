@@ -67,23 +67,31 @@ const getPdfName = (data) => {
 export const uploadPdfFile = async (data) => {
     const formData = new FormData();
     formData.append('file', data.pdfFile[0]);
-    formData.append('title', data.audioFileName)
-    formData.append('jwt', storage.get('auth'))
-    formData.append('id', data.id)
+    formData.append('size', data.pdfFile[0].size);
+    formData.append('title', `${getPdfName(data)}.pdf`)
+    // formData.append('jwt', storage.get('auth'))
+    formData.append('user_id', data.id)
 
     //Traer el ID del context cuando se loguee el usuario, para poder enviar de una vez el id del usuario
     
     const csrftoken = storage.getcookie('csrftoken')
     const response = await axios.post(
-        'http://localhost:8000/sasubook/api/v1/convert_pdf_to_audio/', 
+        `http://localhost:8000/sasubook/api/v1/pdfs/`, 
         formData, 
         {   
             responseType: 'blob', 
             // headers: {'content-type': 'multipart/form-data', 'X-CSRFToken': storage.getcookie('csrftoken')},
             headers: {'content-type': 'multipart/form-data', 'X-CSRFToken': csrftoken},
             withCredentials: true
-        } 
+        }
     )
+    // .then(res => {
+    //     console.log(res.data)
+    // }).catch( e => {
+    //     console.log(e)
+    // })
+    console.log(response)
+    return response.status
 }
 
 /*
@@ -110,6 +118,15 @@ export const convertPDFToAudio = async (data) => {
     // console.log(storage.getcookie('csrftoken'))
     const csrftoken = storage.getcookie('csrftoken')
     // console.log(`Datos enviados: ${formData.get('name')}`)
+    try{
+        const uploadStatus = await uploadPdfFile(data)
+        console.log(`status: ${uploadStatus}`)
+        
+    }catch (e){
+        console.log(e)
+        return
+
+    }
     const response = await axios.post(
         'http://localhost:8000/sasubook/api/v1/convert_pdf_to_audio/', 
         formData, 
@@ -120,8 +137,6 @@ export const convertPDFToAudio = async (data) => {
             withCredentials: true
         } 
     )
-    // const uploadStatus = uploadPdfFile(data)
-    // console.log(uploadStatus)
 
 
     console.log(response)

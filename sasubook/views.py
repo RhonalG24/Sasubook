@@ -218,29 +218,76 @@ def is_google_doc(metadata):
 class UserFilesView(viewsets.ModelViewSet):
     serializer_class = UserPdfFileSerializer
     queryset = UserPdfFile.objects.all()
-    
-def PdfUploadView(request):
-    if request.method == 'POST':
-        form = UploadPdfForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return HttpResponse('The file is saved')
-    else:
-        form = UploadPdfForm()
-        context = {
-			'form': form
-		}
-    return render(request, 'sasubook_templates/UploadPdf.html', context)
 
+def PdfUploadView(request):
+	print(request.method)
+	if request.method == 'POST':
+		print('entró por le post')
+		form = UploadPdfForm(request.POST, request.FILES)
+		print('pasó la creación del form')
+		print(form)
+		if form.is_valid():
+			print('is valid form')
+			form.save()
+			return HttpResponse('The file is saved')
+		else:
+			print('is not valid form')
+			return HttpResponse('The file is not valid')
+	else:
+		# print("Method not Post")
+		# form = UploadPdfForm()
+		# context = {
+		# 	'form': form
+		# }
+		# return render(request, 'sasubook_templates/UploadPdf.html', context)
+		data = PdfFile.objects.all()
+		return HttpResponse(data)
+
+# def GetUserFilesView(request):
+# 	if request.method != 'GET':
+# 		return HttpResponse('Invalid method')
+# 	else:
+# 		print(request)
+# 		user_id = request.data['user_id']
+# 		files = PdfFile.objects.filter(user_id=user_id)
+# 		if files is None:
+# 			raise AuthenticationFailed('Files not found!')
+# 		return Response(files)
+		
+  
 from rest_framework import generics
 
 class PdfListView(generics.ListCreateAPIView):
     queryset = PdfFile.objects.all()
     serializer_class = UploadPdfSerializer
     
-# class PdfDetailView(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = PdfFile.objects.all()
-#     serializer_class = UploadPdfSerializer
+class PdfDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = PdfFile.objects.all()
+    serializer_class = UploadPdfSerializer
+    
+class PdfFileView(viewsets.ModelViewSet):
+	serializer_class = UploadPdfSerializer
+	queryset = PdfFile.objects.all()
+
+
+# class PdfFileActionsView(APIView):
+# 	serializer_class = UploadPdfSerializer
+# 	queryset = PdfFile.objects.all()
+# 	def get(self, request, *args, **kwargs):
+		
+# 		user_id = request.data['user_id']
+
+# 		files = PdfFile.objects.filter(user_id=user_id)
+# 		# print(f'name: {user.name}')
+# 		# print(f'id: {user.id}')
+# 		print(f'files: {files}')
+
+# 		if files is None:
+# 			raise AuthenticationFailed('Files not found!')
+# 		return Response(files)
+        
+
+    
     
 class ConvertPDFToAudio(APIView):
 	def get(self, request, *args, **kwargs):

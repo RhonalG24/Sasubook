@@ -9,6 +9,8 @@ router = routers.DefaultRouter()
 # router.register(r'user_files', views.UserFilesView, 'user_files')
 # router.register(r'voices', views.APIView, 'voices')
 # router.register(r'convert_pdf_to_audio', views.ConvertPDFToAudio, 'convert_pdf_to_audio')
+router.register(r'pdfs', views.PdfFileView, 'pdf_file_view')
+# router.register(r'pdfs/user_pdfs', views.PdfFileActionsView, 'user_pdfs')
 
 urlpatterns = [
     path('register/', views.RegisterView.as_view(), name='register'),
@@ -18,9 +20,13 @@ urlpatterns = [
     path('api/v1/', include(router.urls)),
     path('docs/', include_docs_urls(title="SasuBook API")),
     path('api/v1/convert_pdf_to_audio/', views.ConvertPDFToAudio.as_view(), name='convert_pdf_to_audio'),
+    # path('api/v1/pdfs/user_pdfs/', views.PdfFileActionsView.as_view(), name='user_pdfs'),
     path('pdf/upload', views.PdfUploadView, name='PdfUploadView'),
     path("pdfs/", views.PdfListView.as_view(), name="pdf-list-view"),
-    # path("pdfs/<int:pk>/", views.PdfDetailView.as_view(), name="pdf-detail-view"),
+    path("pdfs/upload/", views.PdfDetailView.as_view(), name="pdf-detail-view"),
+    # path("api/v1/pdfs/", views.PdfFileView.as_view(), name="pdf-file-view"),
+    # path("api/v1/pdfs/user_pdfs", views.GetUserFilesView, name="user_pdfs"),
     
     # path('api/v1/tts/voices/', views.get_voices(), name='get_voices')
+    # path('', include((router.urls)))
 ] #Generate GET, POST, PUT, DELETE endpoints
