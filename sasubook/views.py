@@ -1,16 +1,18 @@
 # from django.shortcuts import render
 from django.contrib.auth import get_user_model, login, logout
 from django.forms import ValidationError
+from django.shortcuts import render
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, permissions, viewsets
+from sasubook.forms import UploadPdfForm
 from sasubook.utils.auth.auth import create_token, get_payload, get_payload_from_GET_request
 
 from sasubook_api.settings import SECRET_KEY
 
 # from .serializer import UserSerializer, UserFileSerializer, UserRegisterSerializer, UserLoginSerializer
-from .serializers import AppUserSerializer, JWTSerializer, UserPdfFileSerializer
+from .serializers import AppUserSerializer, JWTSerializer, UploadPdfSerializer, UserPdfFileSerializer
 # from .serializers import AppUserSerializer, UserSerializer, UserRegisterSerializer, UserLoginSerializer
 # from .models import User, UserFile
 from .validations import custom_validation, validate_email, validate_password
@@ -89,7 +91,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 # from .serializers import UserSerializer
-from .models import AppUser, UserPdfFile
+from .models import AppUser, PdfFile, UserPdfFile
 import jwt, datetime
 
 
@@ -114,6 +116,8 @@ class LoginView(APIView):
         password = request.data['password']
 
         user = AppUser.objects.filter(email=email).first()
+        # print(f'name: {user.name}')
+        # print(f'id: {user.id}')
 
         if user is None:
             raise AuthenticationFailed('User not found!')
@@ -141,8 +145,14 @@ class LoginView(APIView):
         # response.set_cookie(key='jwt', value=token, httponly=True)
         response.set_cookie(key='jwt', value=token, httponly=True)
         response.data = {
-            'jwt': token
+            'jwt': token,
+            'user': {
+				'name': user.name,
+				'id': user.id
+			}
         }
+        
+        # print(response.data)
         return response
 
 
@@ -209,6 +219,120 @@ class UserFilesView(viewsets.ModelViewSet):
     serializer_class = UserPdfFileSerializer
     queryset = UserPdfFile.objects.all()
 
+def PdfUploadView(request):
+	print(request.method)
+	if request.method == 'POST':
+		print('entró por le post')
+		form = UploadPdfForm(request.POST, request.FILES)
+		print('pasó la creación del form')
+		print(form)
+		if form.is_valid():
+			print('is valid form')
+			form.save()
+			return HttpResponse('The file is saved')
+		else:
+			print('is not valid form')
+			return HttpResponse('The file is not valid')
+	else:
+		# print("Method not Post")
+		# form = UploadPdfForm()
+		# context = {
+		# 	'form': form
+		# }
+		# return render(request, 'sasubook_templates/UploadPdf.html', context)
+		data = PdfFile.objects.all()
+		return HttpResponse(data)
+
+# def GetUserFilesView(request):
+# 	if request.method != 'GET':
+# 		return HttpResponse('Invalid method')
+# 	else:
+# 		print(request)
+# 		user_id = request.data['user_id']
+# 		files = PdfFile.objects.filter(user_id=user_id)
+# 		if files is None:
+# 			raise AuthenticationFailed('Files not found!')
+# 		return Response(files)
+		
+  
+from rest_framework import generics
+
+class PdfListView(generics.ListCreateAPIView): #retrieve all PDF's
+    queryset = PdfFile.objects.all()
+    serializer_class = UploadPdfSerializer
+    
+class PdfDetailView(generics.RetrieveUpdateDestroyAPIView): #retrieve by PDF's id.
+	serializer_class = UploadPdfSerializer
+	queryset = PdfFile.objects.all()
+	lookup_field = 'id'
+
+	def get_queryset(self):
+		queryset = super().get_queryset()
+		id = self.kwargs.get('id')
+		if id:
+			queryset = queryset.filter(id=id)
+		
+		return queryset
+
+	def perform_destroy(self, instance):
+		instance.file.delete() #delete from storage
+		instance.delete() #delete the object from the database
+
+	def delete(self, request, *args, **kwargs):
+		id = self.kwargs.get('id')
+		file = PdfFile.objects.get(id=id)
+		file.delete()
+		# return super().delete(request, *args, **kwargs)
+  
+class DeletePdfView(generics.DestroyAPIView): #Delete PDF by pdf's id, this also destroy the file
+	serializer_class = UploadPdfSerializer
+	lookup_field = 'id'
+	queryset = PdfFile.objects.all()
+
+	def get_queryset(self):
+		queryset = super().get_queryset()
+		id = self.kwargs.get('id')
+		if id:
+			queryset = queryset.filter(id=id)
+		
+		return queryset
+
+	def perform_destroy(self, instance):
+		instance.file.delete() #delete from storage
+		instance.delete() #delete the object from the database
+
+class PdfListByUserView(generics.ListAPIView): #retrieve a list of PDF's by user_id
+	serializer_class = UploadPdfSerializer
+
+	def get_queryset(self):
+		user_id = self.kwargs.get('user_id')
+		queryset = PdfFile.objects.filter(user_id=user_id)
+		return queryset
+    
+class PdfFileView(viewsets.ModelViewSet): #retrieve all PDF's
+	serializer_class = UploadPdfSerializer
+	queryset = PdfFile.objects.all()
+
+
+# class PdfFileActionsView(APIView):
+# 	serializer_class = UploadPdfSerializer
+# 	queryset = PdfFile.objects.all()
+# 	def get(self, request, *args, **kwargs):
+		
+# 		user_id = request.data['user_id']
+
+# 		files = PdfFile.objects.filter(user_id=user_id)
+# 		# print(f'name: {user.name}')
+# 		# print(f'id: {user.id}')
+# 		print(f'files: {files}')
+
+# 		if files is None:
+# 			raise AuthenticationFailed('Files not found!')
+# 		return Response(files)
+        
+
+    
+    
 class ConvertPDFToAudio(APIView):
 	def get(self, request, *args, **kwargs):
 
