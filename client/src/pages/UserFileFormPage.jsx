@@ -95,7 +95,7 @@ export function UserFileFormPage(){
 
                     <div className='flex flex-col'>
                         { <label className='self-start'>Velocidad de lectura: </label>}
-                        { <input type='number' label='rate' name='rate' defaultValue='200' placeholder='200 por defecto' {...register('rate')}
+                        { <input type='number' label='rate' name='rate' defaultValue='160' placeholder='160 por defecto' {...register('rate')}
                         className='bg-zinc-700 p-3 rounded-lg block w-40 mb-3'/>}
 
                     </div>

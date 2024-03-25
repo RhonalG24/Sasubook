@@ -18,6 +18,7 @@ import RegisterForm from '../components/RegisterForm';
 import LoginForm from '../components/LoginForm';
 // import { UserContext } from '../contexts/UserContext';
 import UserContext from '../contexts/UserContext';
+import Nav from '../components/Nav';
 
 const client = axios.create({
     // withCredentials: true,
@@ -56,7 +57,8 @@ function SasubookApp(){
             <div className="min-h-full h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-xl w-full space-y-8">
                     <BrowserRouter>
-                    <Navigation currentUser={currentUser} submitLogout={submitLogout}/>
+                    <Nav currentUser={currentUser} submitLogout={submitLogout}/>
+                    {/* <Navigation currentUser={currentUser} submitLogout={submitLogout}/> */}
                         <Routes>
                         {/* <Route path="/" element={<LoginPage/>} />
                         <Route path="/register" element={<RegisterPage/>} /> */}

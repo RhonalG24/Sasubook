@@ -423,15 +423,17 @@ class ConvertPDFToAudio(APIView):
 			# print(text_to_read)
 
 			text_worked = text.strip(' -•')
-			text_worked = text_worked.replace('\n-', '\n' )
-			text_worked = text_worked.replace('\n', ' \n' )
-			# text_worked = text_worked.replace('.', '. \n' )
-			text_worked = text_worked.replace(' -', ', ' )
-			text_worked = text_worked.replace('-', ',' )
-			text_worked = text_worked.replace('V ', 'V' )
-			text_worked = text_worked.replace(' ,', ' ' )
-			text_worked = text_worked.replace(',.', '. ' )
-			text_worked = text_worked.replace('.', '. ' )
+			# text_worked = text_worked.replace('\n-', '\n' )
+			# text_worked = text_worked.replace('\n', ' \n' )
+			# # text_worked = text_worked.replace('.', '. \n' )
+			# # text_worked = text_worked.replace(' -', ', ' )
+			# text_worked = text_worked.replace(' -', ' ' )
+			# # text_worked = text_worked.replace('-', ',' )
+			# text_worked = text_worked.replace('-', '' )
+			# text_worked = text_worked.replace('V ', 'V' )
+			# text_worked = text_worked.replace(' ,', ' ' )
+			# text_worked = text_worked.replace(',.', '. ' )
+			# text_worked = text_worked.replace('.', '. ' )
 
 
 
