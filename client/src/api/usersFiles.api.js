@@ -6,14 +6,34 @@ const usersFilesApi = axios.create({
     baseURL: 'http://localhost:8000/sasubook/api/v1/usersFiles/'
 })
 
+const pdfsApi = axios.create({
+    //aplicar authentication en el back para eliminar
+
+    withCredentials: true,
+    baseURL: 'http://localhost:8000/sasubook/pdfs/'
+})
+
 export const uploadFile = async (file) => {
     // const formData = new FormData()
     // formData.append('pdf', pdfFile)
 
     // await axios.post('http://localhost:8000/sasubook/api/v1/convert_pdf_to_audio/', formData, {responseType: 'blob', headers: {'Content-Type': 'multipart/form-data'}} )
-
+    
     return usersFilesApi.post('/', file)
+    
+}
 
+export const getPdfByUserId = async (userId) =>{
+    return pdfsApi.get(`user_pdfs/${userId}`)
+}
+
+export const deletePdfById = async (pdfId) => {
+    const csrftoken = storage.getcookie('csrftoken')
+    return pdfsApi.delete(`delete/${pdfId}/`, 
+    {   
+        headers: {'X-CSRFToken': csrftoken},
+    }
+    )
 }
 
 // export const convertPDFToAudio = async (pdfFile) => {

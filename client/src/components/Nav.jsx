@@ -1,10 +1,8 @@
 import { Fragment } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Link } from 'react-router-dom'
 import PropTypes from 'prop-types';
-import { useContext } from 'react';
-import UserContext from '../contexts/UserContext';
 
 
 const navigation = [
@@ -20,9 +18,9 @@ function classNames(...classes) {
 }
 
 export default function Nav(props) {
-    const { currentUser } = useContext(UserContext)
+    // const { currentUser } = useContext(UserContext)
   return (
-    <Disclosure as="nav" className="bg-gray-800">
+    <Disclosure as="nav" className="bg-zinc-800">
       {({ open }) => (
         <>
           <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
@@ -41,7 +39,7 @@ export default function Nav(props) {
               </div>
               <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex flex-shrink-0 items-center">
-                    <Link to='/user' className='font-bold text-3xl mb-4'>
+                    <Link to='/user' className='font-bold text-3xl'>
                         <p>SasuBook</p>
                     </Link>
                 </div>
@@ -100,7 +98,7 @@ export default function Nav(props) {
                       <Menu.Item>
                         {({ active }) => (
                           <button type="submit" 
-                                className={classNames(active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700')} 
+                                className={classNames(active ? 'bg-gray-100' : '', 'block mx-auto px-4 py-2 text-sm text-gray-700')} 
                                 onClick={props.submitLogout}>
                           Cerrar sesión
                         </button>

@@ -297,6 +297,15 @@ class DeletePdfView(generics.DestroyAPIView): #Delete PDF by pdf's id, this also
 		
 		return queryset
 
+	def destroy(self, request, *args, **kwargs):
+		try:
+			payload = get_payload(self.request)
+		except AuthenticationFailed:
+			raise AuthenticationFailed('Unauthenticated!')
+		instance = self.get_object()
+		self.perform_destroy(instance)
+		return Response(status=status.HTTP_204_NO_CONTENT)
+
 	def perform_destroy(self, instance):
 		instance.file.delete() #delete from storage
 		instance.delete() #delete the object from the database
