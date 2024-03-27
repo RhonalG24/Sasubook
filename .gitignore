@@ -752,3 +752,7 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Audio file
+*.mp3
+*.wav
