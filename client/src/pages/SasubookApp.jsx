@@ -3,7 +3,7 @@ import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-// import { UsersPage } from './pages/UsersPage/'
+import { UsersPage } from './UsersPage/'
 import { UserPage } from './UserPage'
 import { UserFileFormPage } from './UserFileFormPage'
 import { Navigation } from '../components/Navigation'
@@ -62,7 +62,7 @@ function SasubookApp(){
                         <Routes>
                         {/* <Route path="/" element={<LoginPage/>} />
                         <Route path="/register" element={<RegisterPage/>} /> */}
-                        <Route path='/user'element={ <UserPage/> }/>
+                        <Route path='/user'element={ <UsersPage/> }/>
                         <Route path='/convert_pdf' element={ <UserFileFormPage/> }/>
                         <Route path="*" element={<MatchAllRoute />} />
                         </Routes>

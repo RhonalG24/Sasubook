@@ -1,7 +1,7 @@
-import { UsersList } from '../components/UsersList'
+import { UserPdfsList } from '../components/UserPdfsList'
 
 export function UsersPage() {
-    return <UsersList/>
+    return <UserPdfsList/>
 
     
 }
