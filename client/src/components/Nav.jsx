@@ -10,7 +10,8 @@ const navigation = [
 //   { name: 'Team', href: '#', current: false },
 //   { name: 'Projects', href: '#', current: false },
 //   { name: 'Calendar', href: '#', current: false },
-  { to: '/convert_pdf', text: 'Convertir PDF', current: false}
+  { to: 'user', text: 'Mis PDFs', current:false},
+  { to: '/convert_pdf', text: 'Convertir PDF', current: false},
 ]
 
 function classNames(...classes) {
