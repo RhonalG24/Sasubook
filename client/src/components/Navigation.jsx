@@ -27,7 +27,7 @@ export function Navigation(props){
             {/* <Link to='/users' className='font-bold text-3xl mb-4'>
                 <h1>SasuBook</h1>
             </Link> */}
-            <Link to='/user' className='font-bold text-3xl mb-4'>
+            <Link to='/user' className='font-bold text-xl md:text-2xl lg:text-3xl mb-4'>
                 <h1>SasuBook</h1>
             </Link>
             {/* <button className='bg-indigo-500 px-3 py-2 rounded-lg text-slate-100'> */}

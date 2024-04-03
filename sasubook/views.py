@@ -12,7 +12,7 @@ from sasubook.utils.auth.auth import create_token, get_payload, get_payload_from
 from sasubook_api.settings import SECRET_KEY
 
 # from .serializer import UserSerializer, UserFileSerializer, UserRegisterSerializer, UserLoginSerializer
-from .serializers import AppUserSerializer, JWTSerializer, UploadPdfSerializer, UserPdfFileSerializer
+from .serializers import AppUserSerializer, JWTSerializer, PDFByIdSerializer, UploadPdfSerializer, UserPdfFileSerializer
 # from .serializers import AppUserSerializer, UserSerializer, UserRegisterSerializer, UserLoginSerializer
 # from .models import User, UserFile
 from .validations import custom_validation, validate_email, validate_password
@@ -97,127 +97,116 @@ import jwt, datetime
 
 # Create your views here.
 class RegisterView(APIView):
-    def post(self, request):
-        serializer = AppUserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        response = Response()
-        # response.headers({'Access-Control-Allow-Credentials': 'True'})
-        # response['Access-Control-Allow-Origin'] = True
-        # response['Access-Control-Allow-Credentials'] = True
-        response.data = serializer.data
-        # return Response(serializer.data)
-        return response
+	def post(self, request):
+		serializer = AppUserSerializer(data=request.data)
+		serializer.is_valid(raise_exception=True)
+		serializer.save()
+		response = Response()
+		# response.headers({'Access-Control-Allow-Credentials': 'True'})
+		# response['Access-Control-Allow-Origin'] = True
+		# response['Access-Control-Allow-Credentials'] = True
+		response.data = serializer.data
+		# return Response(serializer.data)
+		return response
 
 
 class LoginView(APIView):
-    def post(self, request):
-        email = request.data['email']
-        password = request.data['password']
+	def post(self, request):
+		email = request.data['email']
+		password = request.data['password']
 
-        user = AppUser.objects.filter(email=email).first()
-        # print(f'name: {user.name}')
-        # print(f'id: {user.id}')
+		user = AppUser.objects.filter(email=email).first()
+		# print(f'name: {user.name}')
+		# print(f'id: {user.id}')
 
-        if user is None:
-            raise AuthenticationFailed('User not found!')
+		if user is None:
+			raise AuthenticationFailed('User not found!')
 
-        if not user.check_password(password):
-            raise AuthenticationFailed('Incorrect password!')
-        
-        token = create_token(user)
+		if not user.check_password(password):
+			raise AuthenticationFailed('Incorrect password!')
+		
+		token = create_token(user)
 
-        # payload = {
-        #     'id': user.id,
-        #     'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-        #     'iat': datetime.datetime.utcnow()
-        # }
+		# payload = {
+		#     'id': user.id,
+		#     'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+		#     'iat': datetime.datetime.utcnow()
+		# }
 
-        # # token = jwt.encode(payload, 'secret', algorithm='HS256').decode('utf-8')
-        # # token = jwt.encode(payload, SECRET_KEY, algorithm='HS256').decode('utf-8')
-        # token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+		# # token = jwt.encode(payload, 'secret', algorithm='HS256').decode('utf-8')
+		# # token = jwt.encode(payload, SECRET_KEY, algorithm='HS256').decode('utf-8')
+		# token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
 
-        response = Response()
-        # response.headers({'Access-Control-Allow-Credentials': 'True'})
-        # response['Access-Control-Allow-Origin'] = True
-        # response['Access-Control-Allow-Credentials'] = True
+		response = Response()
+		# response.headers({'Access-Control-Allow-Credentials': 'True'})
+		# response['Access-Control-Allow-Origin'] = True
+		# response['Access-Control-Allow-Credentials'] = True
 
-        # response.set_cookie(key='jwt', value=token, httponly=True)
-        response.set_cookie(key='jwt', value=token, httponly=True)
-        response.data = {
-            'jwt': token,
-            'user': {
+		# response.set_cookie(key='jwt', value=token, httponly=True)
+		response.set_cookie(key='jwt', value=token, httponly=True)
+		response.data = {
+			'jwt': token,
+			'user': {
 				'name': user.name,
 				'id': user.id
 			}
-        }
-        
-        # print(response.data)
-        return response
+		}
+		
+		# print(response.data)
+		return response
 
 
 
 class UserView(APIView):
 
-    def get(self, request):
-        # token = request.COOKIES.get('jwt')
-        # print(token)
+	def get(self, request):
+		# token = request.COOKIES.get('jwt')
+		# print(token)
 
-        # if not token:
-        #     raise AuthenticationFailed('Unauthenticated!')
+		# if not token:
+		#     raise AuthenticationFailed('Unauthenticated!')
 
-        # try:
-        #     payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        # except jwt.ExpiredSignatureError:
-        #     raise AuthenticationFailed('Unauthenticated!')
-        
-        # print(request.GET.get('jwt'))
-        ##Funciona
-        
-        try: 
-            payload = get_payload_from_GET_request(request)
-            # payload = get_payload(request)
-        except AuthenticationFailed:
-            raise AuthenticationFailed('Unauthenticated!')
+		# try:
+		#     payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+		# except jwt.ExpiredSignatureError:
+		#     raise AuthenticationFailed('Unauthenticated!')
+		
+		# print(request.GET.get('jwt'))
+		##Funciona
+		
+		try: 
+			payload = get_payload_from_GET_request(request)
+			# payload = get_payload(request)
+		except AuthenticationFailed:
+			raise AuthenticationFailed('Unauthenticated!')
 
-        # user = AppUser.objects.filter(id=payload['id']).first()
-        user = AppUser.objects.filter(id=payload['id']).first()
-        serializer = AppUserSerializer(user)
-        return Response(serializer.data)
+		# user = AppUser.objects.filter(id=payload['id']).first()
+		user = AppUser.objects.filter(id=payload['id']).first()
+		serializer = AppUserSerializer(user)
+		return Response(serializer.data)
 
 
 class LogoutView(APIView):
-    def post(self, request):
-        response = Response()
-        response.delete_cookie('jwt')
-        response.data = {
-            'message': 'success'
-        }
-        return response
+	def post(self, request):
+		response = Response()
+		response.delete_cookie('jwt')
+		response.data = {
+			'message': 'success'
+		}
+		return response
 
 from .serializers import PDFSerializer
 from django.http import FileResponse, HttpResponse
 import json
 
-def get_voices():
-	engine = pyttsx3.init()
-	voices = engine.getProperty('voices')
-	# print(type(voices))
-	my_voices = list()
-	for voice in voices:
-		my_voices.append({"name": f'{voice.name}', "id": f'{voice.id}'})
-		# print(voice.name)
-	return json.dumps(my_voices)
-
-def is_google_doc(metadata):
-	return 'Google' in metadata.producer
 
 
-    
+
+	
 
 class UserFilesView(viewsets.ModelViewSet):
-    serializer_class = UserPdfFileSerializer
-    queryset = UserPdfFile.objects.all()
+	serializer_class = UserPdfFileSerializer
+	queryset = UserPdfFile.objects.all()
 
 def PdfUploadView(request):
 	print(request.method)
@@ -254,13 +243,13 @@ def PdfUploadView(request):
 # 			raise AuthenticationFailed('Files not found!')
 # 		return Response(files)
 		
-  
+
 from rest_framework import generics
 
 class PdfListView(generics.ListCreateAPIView): #retrieve all PDF's
-    queryset = PdfFile.objects.all()
-    serializer_class = UploadPdfSerializer
-    
+	queryset = PdfFile.objects.all()
+	serializer_class = UploadPdfSerializer
+	
 class PdfDetailView(generics.RetrieveUpdateDestroyAPIView): #retrieve by PDF's id.
 	serializer_class = UploadPdfSerializer
 	queryset = PdfFile.objects.all()
@@ -283,7 +272,7 @@ class PdfDetailView(generics.RetrieveUpdateDestroyAPIView): #retrieve by PDF's i
 		file = PdfFile.objects.get(id=id)
 		file.delete()
 		# return super().delete(request, *args, **kwargs)
-  
+
 class DeletePdfView(generics.DestroyAPIView): #Delete PDF by pdf's id, this also destroy the file
 	serializer_class = UploadPdfSerializer
 	lookup_field = 'id'
@@ -317,7 +306,7 @@ class PdfListByUserView(generics.ListAPIView): #retrieve a list of PDF's by user
 		user_id = self.kwargs.get('user_id')
 		queryset = PdfFile.objects.filter(user_id=user_id)
 		return queryset
-    
+	
 class PdfFileView(viewsets.ModelViewSet): #retrieve all PDF's
 	serializer_class = UploadPdfSerializer
 	queryset = PdfFile.objects.all()
@@ -338,15 +327,28 @@ class PdfFileView(viewsets.ModelViewSet): #retrieve all PDF's
 # 		if files is None:
 # 			raise AuthenticationFailed('Files not found!')
 # 		return Response(files)
-        
+		
 
-    
-    
+	
+	
 class ConvertPDFToAudio(APIView):
+	def get_voices(self, *args, **kwargs):
+		engine = pyttsx3.init()
+		voices = engine.getProperty('voices')
+		# print(type(voices))
+		my_voices = list()
+		for voice in voices:
+			my_voices.append({"name": f'{voice.name}', "id": f'{voice.id}'})
+			# print(voice.name)
+		return json.dumps(my_voices)
+
+	def is_google_doc(self, metadata, *args, **kwargs):
+		return 'Google' in metadata.producer
+
 	def get(self, request, *args, **kwargs):
 
 		response = HttpResponse(content_type='application/json')
-		response.content = get_voices()
+		response.content = self.get_voices()
 
 		return response
 
@@ -360,7 +362,7 @@ class ConvertPDFToAudio(APIView):
 		# # token = request.COOKIES.get('jwt')
 		# jwtSerializer = JWTSerializer(data=request.data)
 		# if jwtSerializer.is_valid():
-      
+	
 		# 	token = jwtSerializer.validated_data['jwt']
 		# 	print(token)
 
@@ -372,19 +374,41 @@ class ConvertPDFToAudio(APIView):
 		# 	except jwt.ExpiredSignatureError:
 		# 		raise AuthenticationFailed('Unauthenticated!')
 		print(f'payload: {payload["id"]}')
+		# print(request.data)
+		# print(request.data.pdf_id)
 
-		serializer = PDFSerializer(data=request.data)
+		################ Definiendo si se envió el id o el archivo  ################
+		if request.POST.get('pdf_id'):
+			serializer = PDFByIdSerializer(data=request.data)
+			# print('entró por el POST.get')
+		else:
+			serializer = PDFSerializer(data=request.data)
+			# print('entró por el else del POST.get')
+		# print('pasó la creación del serializer')
 		xl=win32com.client.Dispatch("Excel.Application",pythoncom.CoInitialize())
-		if serializer.is_valid():
-			pdf_file = serializer.validated_data['pdf']
 
+		if serializer.is_valid():
+			# print('serializer es válido')
+			################ Definiendo si debo buscar el pdf o si ya lo tengo  ################
+			if request.POST.get('pdf_id'):
+				filtered_pdf = PdfFile.objects.filter(id=serializer.validated_data['pdf_id']).first()
+				# print(PdfFile.objects.filter(id=serializer.validated_data['pdf_id']))
+				pdf_file = filtered_pdf.file
+				# print('entró por el POST.get dentro de la validación del serializer')
+
+			else:
+				pdf_serializer = PDFSerializer(data=request.data)
+				if pdf_serializer.is_valid():
+					pdf_file = pdf_serializer.validated_data['pdf']
+					# print('entró por el else del POST.get de la validación del serializer')
+			# print(serializer.validated_data['pdf_id'])
 			from_page = serializer.validated_data['from_page'] - 1
 			to_page = serializer.validated_data['to_page'] # no le resto uno porque el range es "hasta sin incluir"
 			rate = int(serializer.validated_data['rate'])
 			voice_selected = serializer.validated_data['voice']
 
-			print(from_page) # funciona
-			print(to_page) # funciona
+			# print(from_page) # funciona
+			# print(to_page) # funciona
 
 			# savePdfSerializer = UserPdfFileSerializer(data=pdf_file)
 			# if savePdfSerializer.is_valid():
@@ -403,7 +427,7 @@ class ConvertPDFToAudio(APIView):
 				to_page = len(pdf.pages)
 			text = str()
 
-			print(len(pdf.pages))
+			# print(len(pdf.pages))
 
 			############################# Extracción del texto #############################
 			if from_page != None:
@@ -411,7 +435,7 @@ class ConvertPDFToAudio(APIView):
 
 				while page_number < to_page:
 					text += pdf.pages[page_number].extract_text().strip(' -•■□▢▣▤▥▦▧▨▩▪▫▬▭▮▯▰▱▲△▴▵▶▷▸▹►▻▼▽▾▿◀◁◂◃◄◅◆◇◈◉◊○◌◍◎●◐◑◒◓◔◕◖◗◘◙◚◛◜◝◞◟◠◡◢◣◤◥◦◧◨◩◪◫◬◭◮◯◰◱◲◳◴◵◶◷◸◹◺◻◼◽◾◿') #FUNCIONA
-					if is_google_doc(meta):
+					if self.is_google_doc(meta):
 						text = text.split()
 						text = ' '.join(text)
 
@@ -421,7 +445,7 @@ class ConvertPDFToAudio(APIView):
 					# print(page.extract_text())
 					# text += page.extract_text() #FUNCIONA
 					text += page.extract_text().strip(' -•■□▢▣▤▥▦▧▨▩▪▫▬▭▮▯▰▱▲△▴▵▶▷▸▹►▻▼▽▾▿◀◁◂◃◄◅◆◇◈◉◊○◌◍◎●◐◑◒◓◔◕◖◗◘◙◚◛◜◝◞◟◠◡◢◣◤◥◦◧◨◩◪◫◬◭◮◯◰◱◲◳◴◵◶◷◸◹◺◻◼◽◾◿') #FUNCIONA
-					if is_google_doc(meta):
+					if self.is_google_doc(meta):
 						text = text.split()
 						text = ' '.join(text)
 
@@ -484,10 +508,13 @@ class ConvertPDFToAudio(APIView):
 				response.content = datos_de_audio
 
 			# print(datos_de_audio)
-			print(response)
+			# print(response)
 
 			# return Response(audio_file, content_type='audio/mpeg')
 
 			return response
+		# elif serializer_by_id.is_valid():
+		# 	print('se puede hacer de esta forma')
+		# 	print(serializer_by_id.validated_data['voice'])
 		else:
 			return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

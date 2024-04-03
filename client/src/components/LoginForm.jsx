@@ -5,6 +5,7 @@ import UserContext from '../contexts/UserContext';
 import { show_success_toast, show_error_toast } from '../utils/myToast';
 import Header from './Hearder';
 import { storage } from '../utils/storage';
+import { useNavigate } from 'react-router-dom';
 
 
 
@@ -14,6 +15,7 @@ const client = axios.create({
   });
 
 function LoginForm(props){
+    const navigate = useNavigate()
 
     const { setCurrentUser, email, setEmail, setId, setName} = useContext(UserContext)
     const [ password, setPassword ] = useState('');
@@ -35,6 +37,7 @@ function LoginForm(props){
           setName(res.data.user.name)
           setId(res.data.user.id)
           // setEmail(res.data.user.email)
+          navigate('/user')
           show_success_toast("Sesión iniciada con éxito.")
         }).catch(function(){
           console.log("entró al error")

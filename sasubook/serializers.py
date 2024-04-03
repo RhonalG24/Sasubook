@@ -80,5 +80,15 @@ class PDFSerializer(serializers.Serializer):
     to_page = serializers.IntegerField()
     rate = serializers.IntegerField()
     # language = serializers.CharField()
-    voice = serializers.CharField() # o: male, 1: female
+    voice = serializers.CharField()
     name = serializers.CharField()
+    # pdf_id = serializers.IntegerField(allow_null=True)
+
+class PDFByIdSerializer(serializers.Serializer):
+    # pdf = serializers.FileField()
+    pdf_id = serializers.IntegerField(allow_null=True)
+    from_page = serializers.IntegerField()
+    to_page = serializers.IntegerField()
+    rate = serializers.IntegerField()
+    # language = serializers.CharField()
+    voice = serializers.CharField()
