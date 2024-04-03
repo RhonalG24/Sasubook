@@ -54,8 +54,9 @@ function SasubookApp(){
     if (currentUser) {
         return (
             <div>
-            <div className="min-h-full h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-xl w-full space-y-8">
+            {/* <div className="min-h-full max-h-full h-screen flex items-center justify-center mt-1 py-2 px-2 sm:px-6 lg:px-8"> */}
+            <div className="min-h-full max-h-full h-screen flex justify-center mt-1 py-2 px-2 sm:px-6 lg:px-8">
+                <div className="max-w-full w-full space-y-8">
                     <BrowserRouter>
                     <Nav currentUser={currentUser} submitLogout={submitLogout}/>
                     {/* <Navigation currentUser={currentUser} submitLogout={submitLogout}/> */}
@@ -66,8 +67,8 @@ function SasubookApp(){
                         <Route path='/convert_pdf' element={ <UserFileFormPage/> }/>
                         <Route path="*" element={<MatchAllRoute />} />
                         </Routes>
-                        <div className="center w-full">
-                        <h2>¡Sesión iniciada! Usuario: {email}</h2>
+                        <div className="flex justify-center w-full">
+                        <h2>Usuario actual: {email}</h2>
                         {/* {console.log(axios.get('http://127.0.0.1:8000/sasubook/user'))} */}
                         </div>
                         <Toaster/>
@@ -91,15 +92,15 @@ function SasubookApp(){
 
                         {/* </Routes> */}
                         <Toaster/>
-                    </BrowserRouter>
 
                     {
-                    registrationToggle ? (
-                        <RegisterForm update_form_btn={update_form_btn}></RegisterForm>
-                    ) : (
-                        <LoginForm update_form_btn={update_form_btn}></LoginForm>
-                    )
-                    }
+                        registrationToggle ? (
+                            <RegisterForm update_form_btn={update_form_btn}></RegisterForm>
+                            ) : (
+                                <LoginForm update_form_btn={update_form_btn}></LoginForm>
+                                )
+                            }
+                    </BrowserRouter>
                 </div>
             </div>
         </div>

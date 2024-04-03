@@ -90,7 +90,7 @@ export const uploadPdfFile = async (data) => {
     formData.append('size', data.pdfFile[0].size);
     formData.append('title', `${getPdfName(data)}.pdf`)
     // formData.append('jwt', storage.get('auth'))
-    formData.append('user_id', data.id)
+    formData.append('user_id', data.userId)
 
     //Traer el ID del context cuando se loguee el usuario, para poder enviar de una vez el id del usuario
     
@@ -123,30 +123,34 @@ title = models.CharField(max_length=255)
                             validators=[FileExtensionValidator(allowed_extensions=['pdf'])])
     user_id = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
 */
+
 export const convertPDFToAudio = async (data) => {
     const formData = new FormData();
-    formData.append('pdf', data.pdfFile[0]);
+    let audioFileName //nombre del archivo sin '.pdf'
+    if(data.pdfId){
+        // console.log(`entró por id: ${data.pdfId}`)
+        formData.append('pdf_id', data.pdfId);
+        // console.log(`entró por id: ${data.pdfId} y sigue funcionando`)
+        audioFileName = data.title
+    }else{
+        // console.log("entró por subida de pdf")
+        formData.append('pdf', data.pdfFile[0]);
+        audioFileName = getPdfName(data)
+        formData.append('name', audioFileName)
+        // console.log(`pasó el else`)
+    }
     formData.append('from_page', data.from ? data.from : 1);
     formData.append('to_page', data.to ? data.to : 9999);
     formData.append('rate', data.rate)
     // formData.append('language', data.language)
     formData.append('voice', data.voice)
-    var audioFileName = getPdfName(data)
-    formData.append('name', audioFileName)
     formData.append('jwt', storage.get('auth'))
-
+    
     // console.log(storage.getcookie('csrftoken'))
     const csrftoken = storage.getcookie('csrftoken')
     // console.log(`Datos enviados: ${formData.get('name')}`)
-    try{
-        const uploadStatus = await uploadPdfFile(data)
-        console.log(`status: ${uploadStatus}`)
-        
-    }catch (e){
-        console.log(e)
-        return
 
-    }
+    // console.log('llegó hasta antes de hacer el request')
     const response = await axios.post(
         'http://localhost:8000/sasubook/api/v1/convert_pdf_to_audio/', 
         formData, 
@@ -157,12 +161,12 @@ export const convertPDFToAudio = async (data) => {
             withCredentials: true
         } 
     )
-
-
-    console.log(response)
+    
+    
+    // console.log(response)
     console.log('data:', response.data)
     if(response.data){
-
+    
         const audioBlob = new Blob([response.data], {type:'audio/mpeg'})
         const url = window.URL.createObjectURL(audioBlob);
         const a = document.createElement('a')
@@ -174,8 +178,22 @@ export const convertPDFToAudio = async (data) => {
         // var audioFileName = fileName.substring(0, lastDot)
         a.download = `${audioFileName}.mp3`
         a.click()
+        return('conversión exitosa')
     }else{
         console.log("No hay data para guardar")
+    }
+}
+
+export const uploadAndConvertPDFToAudio = async (data) => {
+    try{
+        const uploadStatus = await uploadPdfFile(data)
+        console.log(`status: ${uploadStatus}`)
+        const convertionResponse = await convertPDFToAudio(data)
+        console.log(convertionResponse)
+    }catch (e){
+        console.log(e)
+        return
+
     }
 }
 

@@ -5,6 +5,7 @@ import { show_success_toast } from '../utils/myToast';
 import Header from './Hearder';
 import { storage } from '../utils/storage';
 import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 
 
 const client = axios.create({
@@ -14,6 +15,7 @@ const client = axios.create({
 
 function RegisterForm(props){
     // let { update_form_btn } = props;
+    const navigate = useNavigate()
     const { setCurrentUser, email, setEmail, name, setName, setId } = useContext(UserContext)
     const [ password, setPassword ] = useState('');
 
@@ -43,6 +45,7 @@ function RegisterForm(props){
             storage.set('auth', res.data.jwt)
             setName(res.data.user.name)
             setId(res.data.user.id)
+            navigate('/user')
             show_success_toast("Sesión iniciada con éxito.")
     
           });

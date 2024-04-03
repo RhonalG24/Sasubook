@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom" 
+import PropTypes from 'prop-types';
 
 
 export function UserCard({ user }){
@@ -17,4 +18,6 @@ export function UserCard({ user }){
             <p className="text-slate-400">{user.ultimo_ingreso}</p>
         </div>
     )
+}UserCard.propTypes = {
+    user: PropTypes.object,
 }

@@ -1,7 +1,4 @@
-import { useNavigate } from "react-router-dom" 
-import { deletePdfById } from "../api/usersFiles.api"
-import toast from 'react-hot-toast'
-
+import PropTypes from 'prop-types';
 
 // data:
 // {
@@ -13,8 +10,7 @@ import toast from 'react-hot-toast'
 //     "user_id": 1
 // },
 
-export function PdfCard({ pdfFile }){
-    const navigate = useNavigate()
+export function PdfCard({ pdfFile, deletePdf }){
     const pdfId = pdfFile.id
     const file = pdfFile.file
     const title = pdfFile.title.replaceAll('_', ' ')
@@ -22,7 +18,7 @@ export function PdfCard({ pdfFile }){
     const time = pdfFile.upload_date.substr(11, 8)
     return (
         // <div style={{background: "#101010"}}
-        <div className="flex flex-row bg-zinc-800 p-3 hover:bg-zinc-700 hover:cursor-pointer "
+        <div className="flex flex-row bg-zinc-800 p-3 hover:bg-zinc-700 hover:cursor-pointer hover:scale-110 transition-all"
             // onClick={ () => { 
             //     navigate(`/users/${pdfFile.id}`)
             // }}
@@ -40,30 +36,17 @@ export function PdfCard({ pdfFile }){
             <div className="flex flex-col basis-1/4 flex-wrap">
                 <button
                     className="bg-red-500 p-3 rounded-lg basis-1/12 md:basis-4/4 my-auto ml-3"
-                    onClick={async () => {
-                    const accepted = window.confirm("¿Estás seguro?");
-                    if (accepted) {
-                        toast.promise(deletePdfById(pdfFile.id), {
-                            loading: 'Eliminando...',
-                            success: '¡Se eliminó el archivo de manera exitosa!',
-                            error: 'Error al eliminar el archivo',
-                          },{
-                            position: "bottom-right",
-                            style: {
-                                background: "#101010",
-                
-                                color: "white",
-                            },
-                            success: {
-                                duration: 5000
-                            },
-                        });
-                    }
-                    }}
+                    value={pdfId}
+                    onClick={(e) => deletePdf(e.target.value)}
+                    // onClick={(e) => console.log(e.target.value)}
                 >
                     Borrar
                 </button>
             </div>
         </div>
     )
+}
+PdfCard.propTypes = {
+    pdfFile: PropTypes.object,
+    deletePdf: PropTypes.func
 }
