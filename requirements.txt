@@ -1,2 +1,25 @@
-# PyJWT==v1.7.1
-PyJWT==v2.8.1
+asgiref==3.7.2
+certifi==2023.11.17
+charset-normalizer==3.3.2
+comtypes==1.2.1
+coreapi==2.3.3
+coreschema==0.0.4
+Django==5.0
+django-cors-headers==4.3.1
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.1
+idna==3.6
+itypes==1.2.0
+Jinja2==3.1.2
+MarkupSafe==2.1.3
+PyJWT==2.8.0
+pypdf==3.17.4
+pypiwin32==223
+pyttsx3==2.90
+pytz==2023.3.post1
+pywin32==306
+requests==2.31.0
+sqlparse==0.4.4
+tzdata==2023.3
+uritemplate==4.1.1
+urllib3==2.1.0

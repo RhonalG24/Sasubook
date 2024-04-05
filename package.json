@@ -1,0 +1,15 @@
+{
+  "name": "sasubook",
+  "version": "1.0.0",
+  "description": "Launch SasuBook web app as a desktop app with electron framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "sasubook": "electron ."
+  },
+  "author": "rhonalgnzl@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "electron": "^29.2.0"
+  }
+}
