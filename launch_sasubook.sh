@@ -13,7 +13,7 @@ npm run dev &
 cd ..
 
 # Iniciar el servidor de desarrollo de Django
-python manage.py runserver &
+python3 manage.py runserver &
 
 # Iniciar npm run sasubook
 npm run sasubook &
