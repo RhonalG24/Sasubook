@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { uploadAndConvertPDFToAudio, convertPDFToAudio, getVoices, getPdfByUserId } from '../api/usersFiles.api'
+import { uploadPdfFile, convertPDFToAudio, getVoices, getPdfByUserId } from '../api/usersFiles.api'
 import toast from 'react-hot-toast'
 import UserContext from '../contexts/UserContext'
 
@@ -69,7 +69,6 @@ export function UserFileFormPage(){
             }
             data['title'] = getPdfTitleByPdfId(data.pdfId)
 
-            // console.log(data['title'])
             toast.promise(convertPDFToAudio(data), {
                     loading: 'Procesando...',
                     success: '¡Conversión exitosa!',
@@ -89,41 +88,61 @@ export function UserFileFormPage(){
         else if (pdfSourceOption === 'uploadFile') {
             data['pdfId'] = null
 
-            toast.promise(uploadAndConvertPDFToAudio(data), {
-                    loading: 'Procesando...',
-                    success: '¡Conversión exitosa!',
+            await toast.promise(uploadPdfFile(data), {
+                loading: 'Subiendo PDF...',
+                success: '¡PDF guardado de manera exitosa!',
+                error: 'Error al guardar el PDF',
+                },{
+                    position: "bottom-right",
+                    style: {
+                        background: "#101010",
+
+                        color: "white",
+                    },
+                    success: {
+                        duration: 5000
+                    },
+            });
+            await toast.promise(convertPDFToAudio(data), {
+                loading: 'Procesando...',
+                success: '¡Conversión exitosa!',
                 error: 'Error al realizar la conversión',
-            },{
-                position: "bottom-right",
+                },{
+                    position: "bottom-right",
                 style: {
                     background: "#101010",
-
+                    
                     color: "white",
                 },
                 success: {
                     duration: 5000
                 },
             });
+
+            // toast.promise(uploadAndConvertPDFToAudio(data), {
+            //         loading: 'Procesando...',
+            //         success: '¡Conversión exitosa!',
+            //     error: 'Error al realizar la conversión',
+            // },{
+            //     position: "bottom-right",
+            //     style: {
+            //         background: "#101010",
+
+            //         color: "white",
+            //     },
+            //     success: {
+            //         duration: 5000
+            //     },
+            // });
         }
 
-        // await convertPDFToAudio(data)
-        // toast.success('Archivo subido', {
-        //     position: "bottom-right",
-        //     style: {
-        //         background: "#101010",
-        //         color: "fff"
-        //     }
-        // })  FUNCIONA!
     })
 
     return (
         <div className='max-w-xl mx-auto'>
             <form action="" onSubmit={onSubmit}>
-                {/* <input type="file" placeholder="Archivo PDF" {...register('pdfFile', {required: true})}
-                className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'/>
-                {errors.pdfFile && <span>Este campo es requerido</span>} */}
 
-                <div className='flex justify-between py-3'>
+                <div className='flex justify-between py-3 flex-wrap'>
                     <div className='flex flex-col'>
                         { <label className='self-start'>Desde: </label>}
                         { <input type='number' label='desde' name='from' placeholder='N° de página' {...register('from')}
@@ -137,33 +156,39 @@ export function UserFileFormPage(){
                     </div>
 
                     <div className='flex flex-col'>
-                        { <label className='self-start'>Velocidad de lectura: </label>}
+                        { <label className='self-start'>Velocidad de lectura: <span>
+                            <div className="group relative inline-block">
+                                <div className="cursor-pointer text-white bg-slate-800 border border-gray-400 rounded-full min-w-4 px-2">
+                                    ?
+                                </div>
+                                <div className="absolute bg-zinc-700 border border-gray-300 p-2 rounded shadow-lg -mt-8 -ml-2 hidden group-hover:block">
+                                    Parabras por minuto
+                                </div>
+                            </div></span></label>}
                         { <input type='number' label='rate' name='rate' defaultValue='160' placeholder='160 por defecto' {...register('rate')}
                         className='bg-zinc-700 p-3 rounded-lg block w-40 mb-3'/>}
 
                     </div>
                 </div>
 
-                <div className='flex justify-between py-3'>
-                    {/* <div className='flex flex-col'>
-                        { <label>Idioma: </label>}
-                        { <input type='select' label='language' name='language' placeholder='Seleccione idioma del texto' {...register('language')}
-                        className='bg-zinc-700 p-3 rounded-lg block w-40 mb-3'/>}
-                    </div> */}
-                </div>
-
                 <div className='flex flex-col'>
-                    { <label className='self-start'>Voz: </label>}
-                    { <select  label='voice' name='voice' placeholder='Seleccione la voz del lector' {...register('voice')}
+                    { <label className='self-start'>Voz: <span>
+                        <div className="group relative inline-block">
+                            <div className="cursor-pointer text-white bg-slate-800 border border-gray-400 rounded-full min-w-4 px-2">
+                                ?
+                            </div>
+                            <div className="absolute min-w-20 bg-zinc-700 border border-gray-300 p-2 rounded shadow-lg -mt-8 -ml-2 hidden group-hover:block">
+                                De acuerdo al idioma del texto en el PDF
+                            </div>
+                        </div></span></label>}
+                    { <select  label='voice' name='voice' placeholder='Seleccione la voz del lector' {...register('voice', {required: true})}
                     className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'>
                         { 
-                            <option key={''} value={''}>Seleccione una voz</option>
+                            <option key={''} value="">Seleccione una voz</option>
                         }
                         { voices.map( voice => (
                             <option key={voice.id} value={voice.id}>{voice.name}</option>
                         ))}
-                        {/* <option  value='0' >Masculino</option>
-                        <option value='1' >Femenino</option>  */}
                     </select>}
                     {errors.voice && <span className='bg-red-700'>Este campo es requerido</span>}
 
@@ -186,16 +211,14 @@ export function UserFileFormPage(){
 
                     { pdfSourceOption === 'ownFile' && pdfs.length > 0 && (
                         <div className='flex flex-col'>
-                            <select  label='pdfId' name='pdfId' placeholder='Seleccione uno de sus archivos PDF' {...register('pdfId')}
+                            <select  label='pdfId' name='pdfId' placeholder='Seleccione uno de sus archivos PDF' {...register('pdfId', {required: true})}
                             className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'>
                                 { 
-                                    <option key={''} value={''}>Seleccione uno de sus archivos PDF</option>
+                                    <option key={''} value="">Seleccione uno de sus archivos PDF</option>
                                 }
                                 { pdfs.map( pdfFile => (
                                     <option key={pdfFile.id} value={pdfFile.id}>{pdfFile.title.includes('_') ? pdfFile.title.replaceAll('_', ' ') : pdfFile.title}</option>
                                     ))}
-                                {/* <option  value='0' >Masculino</option>
-                                <option value='1' >Femenino</option>  */}
                             </select>
                             {errors.pdfId && <span className='bg-red-700'>Este campo es requerido</span>}
 
@@ -214,12 +237,15 @@ export function UserFileFormPage(){
                         <div className='flex flex-col'>
                             <input type='file' {...register('pdfFile', {required: true})}
                             className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'/> 
+                            {errors.pdfFile && <span className='bg-red-700'>Este campo es requerido</span>}
+                            
                             <button className='w-full mt-4'>Subir y convertir PDF</button>
                         </div>
                     )}
+
+
                 </div>
 
-                {errors.pdfFile && <span className='bg-red-700'>Este campo es requerido</span>}
 
             </form>
         </div>
