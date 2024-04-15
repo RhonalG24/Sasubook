@@ -4,8 +4,10 @@ echo Initializing client configurations...
 
 cd client
 
-npm install
+call npm install
 
-npm audit fix
+call npm audit fix
 
 echo Client configurations done!
+
+call exit

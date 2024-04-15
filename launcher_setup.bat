@@ -2,8 +2,10 @@
 
 echo Initializing launcher configurations...
 
-npm install
+call npm install
 
-npm audit fix
+call npm audit fix
 
 echo Launcher configurations done!
+
+call exit
