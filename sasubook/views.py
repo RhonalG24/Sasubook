@@ -9,6 +9,7 @@ from rest_framework import status, permissions, viewsets
 from sasubook.forms import UploadPdfForm
 from sasubook.utils.auth.auth import create_token, get_payload, get_payload_from_GET_request
 
+from sasubook.utils.system_verifications import is_os_windows
 from sasubook_api.settings import SECRET_KEY
 
 # from .serializer import UserSerializer, UserFileSerializer, UserRegisterSerializer, UserLoginSerializer
@@ -21,8 +22,9 @@ from io import BytesIO
 import pypdf
 import pyttsx3
 
-import win32com.client
-import pythoncom
+if is_os_windows():
+	import win32com.client
+	import pythoncom
 
 # Create your views here.
 
@@ -384,8 +386,9 @@ class ConvertPDFToAudio(APIView):
 		else:
 			serializer = PDFSerializer(data=request.data)
 			# print('entró por el else del POST.get')
-		# print('pasó la creación del serializer')
-		xl=win32com.client.Dispatch("Excel.Application",pythoncom.CoInitialize())
+		# print('pasó la creación del serializer')z
+		if is_os_windows():
+			xl=win32com.client.Dispatch("Excel.Application",pythoncom.CoInitialize())
 
 		if serializer.is_valid():
 			# print('serializer es válido')
