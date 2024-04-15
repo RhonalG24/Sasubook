@@ -1,32 +1,19 @@
 #!/bin/bash
-# Crear un entorno virtual de Python
-python3 -m venv sasubook-env
 
-# Activar el entorno virtual
-source .sasubook-env/bin/activate
+# Asignación de permisos a los setup .sh
 
-# Instalar las dependencias desde requirements.txt
-pip install -r requirements.txt
+chmod +x client_setup.sh launch_sasubook_admin.sh launch_sasubook.sh launcher_setup.sh server_setup.sh
 
-python3 manage.py makemigrations
+# Configuración del servidor
+source server_setup.sh
 
-python3 manage.py migrate
-
-echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@sasubook.com', 'admin')" | python3 manage.py shell
+# Configuración del servidor
+gnome-terminal -- bash -c 'client_setup.sh'
 
 # Instalar dependencias de node desde package.json para electron
-npm install
 
-npm audit fix
+gnome-terminal -- bash -c 'launcher_setup.sh'
 
-# Instalar dependencias de node desde package.json para el cliente Vite + React
-cd client
+echo Configurations done...
 
-npm install
-
-npm audit fix
-
-cd ..
-
-# Desactivar el entorno virtual
-deactivate
+pause

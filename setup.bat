@@ -1,34 +1,15 @@
 @echo off
-REM Crear un entorno virtual de Python
-python -m venv sasubook-env
 
-REM Activar el entorno virtual
-call sasubook-env/Scripts/activate
+@REM Configuración del servidor
+call server_setup.bat
 
-REM Instalar las dependencias desde requirements.txt
-pip install -r requirements.txt
+@REM Configuración del servidor
+start client_setup.bat
 
-python manage.py makemigrations
+@REM Instalar dependencias de node desde package.json para electron
 
-python manage.py migrate
+start launcher_setup.bat
 
-echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin@sasubook.com', 'admin')" | python manage.py shell
-
-REM Instalar dependencias de node desde package.json para electron
-start npm install
-
-npm audit fix
-
-REM Instalar dependencias de node desde package.json para el cliente Vite + React
-cd client
-
-npm install
-
-npm audit fix
-
-cd ..
-
-REM Desactivar el entorno virtual
-deactivate
+echo Configurations done...
 
 pause

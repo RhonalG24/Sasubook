@@ -16,4 +16,4 @@ cd..
 start /min python manage.py runserver
 
 @REM Iniciar npm run sasubook
-start /min npm run sasubook
+start /min npm run admin
