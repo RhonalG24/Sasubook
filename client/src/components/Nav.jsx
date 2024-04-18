@@ -80,7 +80,7 @@ export default function Nav(props) {
                       <span className="sr-only">Open user menu</span>
                       <img
                         className="h-8 w-8 rounded-full"
-                        src="../../public/abstract-user-flat-3.svg"
+                        src="../../abstract-user-flat-3.svg"
                         alt=""
                       />
                     </Menu.Button>

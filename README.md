@@ -4,14 +4,29 @@ Sasubook es un proyecto que busca facilitar el acceso a la información escrita 
 
 El desarrollo de este proyecto puede ayudar a mejorar la calidad de vida de las personas que tienen dificultades para leer o que no poseen el tiempo necesario para realizar esta actividad. Además, es un paso importante hacia la construcción de una sociedad más inclusiva y equitativa en el acceso a la información.
 
-## Cómo configurar Sasubook en tu equipo Windows
+## Cómo configurar Sasubook en tu equipo
 Se debe clonar o descargar el proyecto desde [Github](https://github.com/RhonalG24/Sasubook). 
 
-Una vez se tenga el proyecto en el equipo se abre en el explorador de archivos y se ejecuta el archivo *setup.bat* si se está en el sistema operativo Windows. Si se está en Linux se debe ejecutar el archivo *setup.sh*. 
-
-Estos se encuentran en el directorio raíz del proyecto. Este instalará las dependencias necesarias para ejecutar el programa. 
+### Usuarios Windows
+Una vez se tenga el proyecto en el equipo se abre en el explorador de archivos y se ejecuta el archivo *setup.bat* si se está en el sistema operativo Windows. 
 
 Es este paso se le solicitará los datos para **crear un usuario administrador**. Este usuario podrá entrar al portal de administrador para el manejo de usuarios del sistema. También podrá visualizar la totalidad de los archivos PDF cargados en el sistema a través de dicho portal.
+
+Una vez finalice la configuración ya se podrá ejecutar el programa.
+
+### Usuarios Linux
+Si se está en Linux se debe ejecutar el archivo *setup.sh*. Si este no logra instalar las dependencias se deberá ejecutar individualmente los siguientes archivos: 
+- client_setup.sh,
+- launcher_setup.sh
+- server_setup.sh
+Estos se encuentran en el directorio raíz del proyecto e instalarán las dependencias necesarias para ejecutar el programa. 
+
+Durante la ejecución del archivo server_setup.sh se le solicitará los datos para **crear un usuario administrador**. Este usuario podrá entrar al portal de administrador para el manejo de usuarios del sistema. También podrá visualizar la totalidad de los archivos PDF cargados en el sistema a través de dicho portal.
+
+Adicionalmente, se deberá instalar en el sistema operativo las bibliotecas libespeak1 y ffmpeg ejecutando en una terminal los siguientes comandos:
+- sudo apt install libespeak1
+- sudo apt install ffmpeg
+Estos son necesarios para el correcto funcionamiento de la biblioteca pyttsx3 de Python, necesaria para el procesamiento de los archivos PDF
 
 Una vez finalice la configuración ya se podrá ejecutar el programa.
 

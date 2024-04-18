@@ -69,6 +69,9 @@ from .managers import AppUserManager
 #     def __str__(self) -> str:
 #         return self.nombre
 
+def get_file_upload_path(instance, filename):
+	return f'user-{instance.user_id}/pdfs/{filename}'
+
 # Create your models here.
 class AppUser(AbstractUser):
     name = models.CharField(max_length=255)
@@ -87,7 +90,7 @@ class UserPdfFile(models.Model):
     size = models.CharField(max_length = 50)
     type = models.CharField(max_length = 4)
     # archivo = models.FileField(upload_to='pdfs/', blank=True)
-    file = models.FileField(upload_to=f'{BASE_DIR}\public\generated_files/',
+    file = models.FileField(upload_to=get_file_upload_path,
                             blank=True, 
                             validators=[FileExtensionValidator(allowed_extensions=['pdf'])])
     url = models.URLField(max_length=255, blank=True)
@@ -103,7 +106,7 @@ class PdfFile(models.Model):
     title = models.CharField(max_length=255) 
     upload_date = models.DateTimeField(auto_now_add=True)
     size = models.CharField(max_length = 50)
-    file = models.FileField(upload_to=f'{BASE_DIR}/media/pdfs/',
+    file = models.FileField(upload_to=get_file_upload_path,
                             blank=True, 
                             validators=[FileExtensionValidator(allowed_extensions=['pdf'])])
     user_id = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
