@@ -4,17 +4,17 @@ UserModel = get_user_model()
 
 def custom_validation(data):
     email = data['email'].strip()
-    username = data['username'].strip()
+    name = data['name'].strip()
     password = data['password'].strip()
     ##
     if not email or UserModel.objects.filter(email=email).exists():
-        raise ValidationError('choose another email')
+        raise ValidationError('El email ingresado ya existe en el sistema')
     ##
     if not password or len(password) < 8:
-        raise ValidationError('choose another password, min 8 characters')
+        raise ValidationError('La contraseña debe contener como mínimo 8 caracteres')
     ##
-    if not username:
-        raise ValidationError('choose another username')
+    if not name:
+        raise ValidationError('Ingrese un nombre')
     return data
 
 

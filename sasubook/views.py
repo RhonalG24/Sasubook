@@ -9,6 +9,7 @@ from rest_framework import status, permissions, viewsets
 from sasubook.forms import UploadPdfForm
 from sasubook.utils.auth.auth import create_token, get_payload, get_payload_from_GET_request
 
+from sasubook.utils.pdf.PyPdfHandler import PyPdfHandler
 from sasubook.utils.system_verifications import is_os_windows
 from sasubook_api.settings import SECRET_KEY
 
@@ -100,7 +101,12 @@ import jwt, datetime
 # Create your views here.
 class RegisterView(APIView):
 	def post(self, request):
-		serializer = AppUserSerializer(data=request.data)
+		try:
+			validated_data = custom_validation(request.data)
+		except ValidationError as e:
+			print(e.message)
+			return Response(data=e.message, status=status.HTTP_400_BAD_REQUEST)
+		serializer = AppUserSerializer(data=validated_data)
 		serializer.is_valid(raise_exception=True)
 		serializer.save()
 		response = Response()
@@ -122,10 +128,12 @@ class LoginView(APIView):
 		# print(f'id: {user.id}')
 
 		if user is None:
-			raise AuthenticationFailed('User not found!')
+			return Response(data="El email ingresado no se encuentra registrado en el sistema", status=status.HTTP_404_NOT_FOUND)
+			# raise AuthenticationFailed('User not found!')
 
 		if not user.check_password(password):
-			raise AuthenticationFailed('Incorrect password!')
+			return Response(data="Contraseña incorrecta", status=status.HTTP_400_BAD_REQUEST)
+			# raise AuthenticationFailed('Incorrect password!')	
 		
 		token = create_token(user)
 
@@ -179,7 +187,8 @@ class UserView(APIView):
 		try: 
 			payload = get_payload_from_GET_request(request)
 			# payload = get_payload(request)
-		except AuthenticationFailed:
+		except AuthenticationFailed as e:
+			return Response(data=e.detail)
 			raise AuthenticationFailed('Unauthenticated!')
 
 		# user = AppUser.objects.filter(id=payload['id']).first()
@@ -213,7 +222,7 @@ class UserFilesView(viewsets.ModelViewSet):
 def PdfUploadView(request):
 	print(request.method)
 	if request.method == 'POST':
-		print('entró por le post')
+		print('entró por el post')
 		form = UploadPdfForm(request.POST, request.FILES)
 		print('pasó la creación del form')
 		print(form)
@@ -291,7 +300,8 @@ class DeletePdfView(generics.DestroyAPIView): #Delete PDF by pdf's id, this also
 	def destroy(self, request, *args, **kwargs):
 		try:
 			payload = get_payload(self.request)
-		except AuthenticationFailed:
+		except AuthenticationFailed as e:
+			return Response(data=e.detail, status=status.HTTP_401_UNAUTHORIZED)
 			raise AuthenticationFailed('Unauthenticated!')
 		instance = self.get_object()
 		self.perform_destroy(instance)
@@ -357,7 +367,9 @@ class ConvertPDFToAudio(APIView):
 	def post(self, request, *args, **kwargs):
 		try:
 			payload = get_payload(request)
-		except AuthenticationFailed:
+		except AuthenticationFailed as e:
+			print(e)			
+			return Response(data=e.detail, status=status.HTTP_401_UNAUTHORIZED)
 			raise AuthenticationFailed('Unauthenticated!')
 
 		# print(f'request: ')
@@ -395,70 +407,38 @@ class ConvertPDFToAudio(APIView):
 			################ Definiendo si debo buscar el pdf o si ya lo tengo  ################
 			if request.POST.get('pdf_id'):
 				filtered_pdf = PdfFile.objects.filter(id=serializer.validated_data['pdf_id']).first()
-				# print(PdfFile.objects.filter(id=serializer.validated_data['pdf_id']))
 				pdf_file = filtered_pdf.file
-				# print('entró por el POST.get dentro de la validación del serializer')
-
 			else:
 				pdf_serializer = PDFSerializer(data=request.data)
 				if pdf_serializer.is_valid():
 					pdf_file = pdf_serializer.validated_data['pdf']
-					# print('entró por el else del POST.get de la validación del serializer')
-			# print(serializer.validated_data['pdf_id'])
-			from_page = serializer.validated_data['from_page'] - 1
-			to_page = serializer.validated_data['to_page'] # no le resto uno porque el range es "hasta sin incluir"
+
+			################ Creación de objeto con las propiedades/configuraciones para la conversión  ################
+			pdf_properties = {}
+			pdf_properties['from_page'] = serializer.validated_data['from_page'] - 1
+			pdf_properties['to_page'] = serializer.validated_data['to_page'] # no le resto uno porque el range es "hasta sin incluir"
+			pdf_properties['rate'] = int(serializer.validated_data['rate'])
+			pdf_properties['voice_selected'] = serializer.validated_data['voice']
+			
 			rate = int(serializer.validated_data['rate'])
 			voice_selected = serializer.validated_data['voice']
 
-			# print(from_page) # funciona
-			# print(to_page) # funciona
-
-			# savePdfSerializer = UserPdfFileSerializer(data=pdf_file)
-			# if savePdfSerializer.is_valid():
-			# 	savePdfSerializer.save()
-
-			pdf = pypdf.PdfReader(pdf_file)
-
-
-			############################# Extracción del metadata #############################
-			meta = pdf.metadata
-
-			print(meta.producer)
+			pdfHandler = PyPdfHandler(pdf_file, pdf_properties)
+			print(pdfHandler.to_page)
+			for propertys in pdf_properties:
+				print(propertys)
 
 			############################# Seteo de la página final #############################
-			if (to_page)  > len(pdf.pages):
-				to_page = len(pdf.pages)
-			text = str()
 
-			# print(len(pdf.pages))
+			# pdfHandler.set_to_page()
+			# print(f'pagina final: {pdfHandler.to_page}')
+			# print(f'pagina inicial: {pdfHandler.from_page}')
 
 			############################# Extracción del texto #############################
-			if from_page != None:
-				page_number = from_page
+			text = pdfHandler.extract_text()
+			
 
-				while page_number < to_page:
-					text += pdf.pages[page_number].extract_text().strip(' -•■□▢▣▤▥▦▧▨▩▪▫▬▭▮▯▰▱▲△▴▵▶▷▸▹►▻▼▽▾▿◀◁◂◃◄◅◆◇◈◉◊○◌◍◎●◐◑◒◓◔◕◖◗◘◙◚◛◜◝◞◟◠◡◢◣◤◥◦◧◨◩◪◫◬◭◮◯◰◱◲◳◴◵◶◷◸◹◺◻◼◽◾◿') #FUNCIONA
-					if self.is_google_doc(meta):
-						text = text.split()
-						text = ' '.join(text)
-
-					page_number += 1
-			else:
-				for page in pdf.pages:
-					# print(page.extract_text())
-					# text += page.extract_text() #FUNCIONA
-					text += page.extract_text().strip(' -•■□▢▣▤▥▦▧▨▩▪▫▬▭▮▯▰▱▲△▴▵▶▷▸▹►▻▼▽▾▿◀◁◂◃◄◅◆◇◈◉◊○◌◍◎●◐◑◒◓◔◕◖◗◘◙◚◛◜◝◞◟◠◡◢◣◤◥◦◧◨◩◪◫◬◭◮◯◰◱◲◳◴◵◶◷◸◹◺◻◼◽◾◿') #FUNCIONA
-					if self.is_google_doc(meta):
-						text = text.split()
-						text = ' '.join(text)
-
-			# print(text)  For Google Docs
-			text_array = text.split()
-			text_to_read = ' '.join(text_array)
-
-			# print(text_to_read)
-
-			text_worked = text.strip(' -•')
+			# text_worked = text.strip(' -•')
 			# text_worked = text_worked.replace('\n-', '\n' )
 			# text_worked = text_worked.replace('\n', ' \n' )
 			# # text_worked = text_worked.replace('.', '. \n' )
@@ -471,10 +451,7 @@ class ConvertPDFToAudio(APIView):
 			# text_worked = text_worked.replace(',.', '. ' )
 			# text_worked = text_worked.replace('.', '. ' )
 
-
-
-			print(text_worked)
-
+			print(pdfHandler.text)
 			############################# Conversion a voz #############################
 			engine = pyttsx3.init()
 			############################# Set voice #############################
@@ -497,7 +474,7 @@ class ConvertPDFToAudio(APIView):
 
 			############################# Generación del archivo de audio #############################
 			output_file = 'audio_tmp.mp3'
-			engine.save_to_file(text_to_read, output_file)
+			engine.save_to_file(text, output_file)
 			engine.runAndWait()
 
 			############################# Obteción de los bytes del archivo de audio para retornar #############################
