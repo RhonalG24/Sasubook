@@ -39,9 +39,9 @@ function LoginForm(props){
           // setEmail(res.data.user.email)
           navigate('/user')
           show_success_toast("Sesión iniciada con éxito.")
-        }).catch(function(){
-          console.log("entró al error")
-          show_error_toast("Usuario o contraseña incorrecta")
+        }).catch(function(res){
+          console.log(res.response.data)
+          show_error_toast(res.response.data)
         });
       }
 
@@ -53,12 +53,13 @@ function LoginForm(props){
             <form onSubmit={e => submitLogin(e)}>
                 <div className='flex flex-col w-full'>
                     <label className='self-start'>Dirección de email</label>
-                    <input type='email' placeholder='correo@email.com' value={email} onChange={e => setEmail(e.target.value)}
+                    <input type='email' placeholder='correo@email.com' required value={email} onChange={e => setEmail(e.target.value)}
                     className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'></input>
                 </div>
                 <div className='flex flex-col'>
                     <label className='self-start'>Contraseña</label>
-                    <input type='password' placeholder='contraseña' value={password} onChange={e => setPassword(e.target.value)} className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'></input>
+                    <input type='password' placeholder='contraseña' required value={password} onChange={e => setPassword(e.target.value)} 
+                    className='bg-zinc-700 p-3 rounded-lg block w-full mb-3'></input>
                 </div>
                 <button type="submit" className='w-full bg-gray-950'>Ingresar</button>
             </form>
