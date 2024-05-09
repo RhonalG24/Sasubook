@@ -160,9 +160,9 @@ export const convertPDFToAudio = async (data) => {
             headers: {'content-type': 'multipart/form-data', 'X-CSRFToken': csrftoken},
             withCredentials: true
         } 
-    ).catch( res => {
-        console.log(res.response.request.statusText)
-        throw res.response.request.statusText
+    ).catch( error => {
+        console.log(error.response.request.statusText)
+        throw error.response.request.statusText
     })
     
     
