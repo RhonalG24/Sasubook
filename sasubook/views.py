@@ -333,9 +333,9 @@ class PdfFileView(viewsets.ModelViewSet): #retrieve all PDF's
 	
 class ConvertPDFToAudio(APIView):
 	def get(self, request, *args, **kwargs):
-
+		pdf_controller_helper = PdfControllerHelper(None)
 		response = HttpResponse(content_type='application/json')
-		response.content = PdfControllerHelper.get_voices()
+		response.content = pdf_controller_helper.get_voices()
 
 		return response
 
