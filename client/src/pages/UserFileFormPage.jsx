@@ -165,7 +165,7 @@ export function UserFileFormPage(){
                                     Parabras por minuto
                                 </div>
                             </div></span></label>}
-                        { <input type='number' label='rate' name='rate' defaultValue='160' placeholder='160 por defecto' {...register('rate')}
+                        { <input type='number' label='rate' name='rate' defaultValue='160' placeholder='160 por defecto' required {...register('rate')}
                         className='bg-zinc-700 p-3 rounded-lg block w-40 mb-3'/>}
 
                     </div>

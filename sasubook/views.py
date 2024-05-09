@@ -1,27 +1,25 @@
-# from django.shortcuts import render
-from django.contrib.auth import get_user_model, login, logout
 from django.forms import ValidationError
-from django.shortcuts import render
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, permissions, viewsets
 from sasubook.forms import UploadPdfForm
 from sasubook.utils.auth.auth import create_token, get_payload, get_payload_from_GET_request
 
+from sasubook.utils.pdf.PdfControllerHelper import PdfControllerHelper
 from sasubook.utils.pdf.PyPdfHandler import PyPdfHandler
 from sasubook.utils.system_verifications import is_os_windows
+from sasubook.utils.tts.TTSEngineBuilder import TTSEngineBuilder
 from sasubook_api.settings import SECRET_KEY
 
 # from .serializer import UserSerializer, UserFileSerializer, UserRegisterSerializer, UserLoginSerializer
 from .serializers import AppUserSerializer, JWTSerializer, PDFByIdSerializer, UploadPdfSerializer, UserPdfFileSerializer
 # from .serializers import AppUserSerializer, UserSerializer, UserRegisterSerializer, UserLoginSerializer
 # from .models import User, UserFile
-from .validations import custom_validation, validate_email, validate_password
+from .validations import custom_validation
 
-from io import BytesIO
-import pypdf
 import pyttsx3
+
+from sasubook import serializers
 
 if is_os_windows():
 	import win32com.client
@@ -206,14 +204,7 @@ class LogoutView(APIView):
 		}
 		return response
 
-from .serializers import PDFSerializer
-from django.http import FileResponse, HttpResponse
-import json
-
-
-
-
-	
+from django.http import HttpResponse
 
 class UserFilesView(viewsets.ModelViewSet):
 	serializer_class = UserPdfFileSerializer
@@ -339,28 +330,12 @@ class PdfFileView(viewsets.ModelViewSet): #retrieve all PDF's
 # 		if files is None:
 # 			raise AuthenticationFailed('Files not found!')
 # 		return Response(files)
-		
-
-	
 	
 class ConvertPDFToAudio(APIView):
-	def get_voices(self, *args, **kwargs):
-		engine = pyttsx3.init()
-		voices = engine.getProperty('voices')
-		# print(type(voices))
-		my_voices = list()
-		for voice in voices:
-			my_voices.append({"name": f'{voice.name}', "id": f'{voice.id}'})
-			# print(voice.name)
-		return json.dumps(my_voices)
-
-	def is_google_doc(self, metadata, *args, **kwargs):
-		return 'Google' in metadata.producer
-
 	def get(self, request, *args, **kwargs):
 
 		response = HttpResponse(content_type='application/json')
-		response.content = self.get_voices()
+		response.content = PdfControllerHelper.get_voices()
 
 		return response
 
@@ -370,131 +345,73 @@ class ConvertPDFToAudio(APIView):
 		except AuthenticationFailed as e:
 			print(e)			
 			return Response(data=e.detail, status=status.HTTP_401_UNAUTHORIZED)
-			raise AuthenticationFailed('Unauthenticated!')
+			# raise AuthenticationFailed('Unauthenticated!')
+  
+		# print(f'payload: {payload["id"]}')
 
-		# print(f'request: ')
-		# # token = request.COOKIES.get('jwt')
-		# jwtSerializer = JWTSerializer(data=request.data)
-		# if jwtSerializer.is_valid():
-	
-		# 	token = jwtSerializer.validated_data['jwt']
-		# 	print(token)
-
-		# 	if not token:
-		# 		raise AuthenticationFailed('Unauthenticated!')
-
-		# 	try:
-		# 		payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-		# 	except jwt.ExpiredSignatureError:
-		# 		raise AuthenticationFailed('Unauthenticated!')
-		print(f'payload: {payload["id"]}')
-		# print(request.data)
-		# print(request.data.pdf_id)
-
-		################ Definiendo si se envió el id o el archivo  ################
-		if request.POST.get('pdf_id'):
-			serializer = PDFByIdSerializer(data=request.data)
-			# print('entró por el POST.get')
-		else:
-			serializer = PDFSerializer(data=request.data)
-			# print('entró por el else del POST.get')
-		# print('pasó la creación del serializer')z
 		if is_os_windows():
 			xl=win32com.client.Dispatch("Excel.Application",pythoncom.CoInitialize())
+		
+		################ Obtengo los datos del pdf ################
+		try:
+			pdf_controller_helper = PdfControllerHelper(request=request)
+			pdf_file, pdf_properties = pdf_controller_helper.get_all_pdf_data().values()
+		except serializers.ValidationError as ex:
+			return Response(ex, status=status.HTTP_400_BAD_REQUEST)
 
-		if serializer.is_valid():
-			# print('serializer es válido')
-			################ Definiendo si debo buscar el pdf o si ya lo tengo  ################
-			if request.POST.get('pdf_id'):
-				filtered_pdf = PdfFile.objects.filter(id=serializer.validated_data['pdf_id']).first()
-				pdf_file = filtered_pdf.file
-			else:
-				pdf_serializer = PDFSerializer(data=request.data)
-				if pdf_serializer.is_valid():
-					pdf_file = pdf_serializer.validated_data['pdf']
+		pdfHandler = PyPdfHandler(pdf_file, pdf_properties)
+		print(pdfHandler.to_page)
+		for propertys in pdf_properties:
+			print(propertys)
 
-			################ Creación de objeto con las propiedades/configuraciones para la conversión  ################
-			pdf_properties = {}
-			pdf_properties['from_page'] = serializer.validated_data['from_page'] - 1
-			pdf_properties['to_page'] = serializer.validated_data['to_page'] # no le resto uno porque el range es "hasta sin incluir"
-			pdf_properties['rate'] = int(serializer.validated_data['rate'])
-			pdf_properties['voice_selected'] = serializer.validated_data['voice']
-			
-			rate = int(serializer.validated_data['rate'])
-			voice_selected = serializer.validated_data['voice']
+		############################# Extracción del texto #############################
+		text = pdfHandler.extract_text()
 
-			pdfHandler = PyPdfHandler(pdf_file, pdf_properties)
-			print(pdfHandler.to_page)
-			for propertys in pdf_properties:
-				print(propertys)
+		print(pdfHandler.text)
+		############################# Conversion a voz #############################
 
-			############################# Seteo de la página final #############################
-
-			# pdfHandler.set_to_page()
-			# print(f'pagina final: {pdfHandler.to_page}')
-			# print(f'pagina inicial: {pdfHandler.from_page}')
-
-			############################# Extracción del texto #############################
-			text = pdfHandler.extract_text()
-			
-
-			# text_worked = text.strip(' -•')
-			# text_worked = text_worked.replace('\n-', '\n' )
-			# text_worked = text_worked.replace('\n', ' \n' )
-			# # text_worked = text_worked.replace('.', '. \n' )
-			# # text_worked = text_worked.replace(' -', ', ' )
-			# text_worked = text_worked.replace(' -', ' ' )
-			# # text_worked = text_worked.replace('-', ',' )
-			# text_worked = text_worked.replace('-', '' )
-			# text_worked = text_worked.replace('V ', 'V' )
-			# text_worked = text_worked.replace(' ,', ' ' )
-			# text_worked = text_worked.replace(',.', '. ' )
-			# text_worked = text_worked.replace('.', '. ' )
-
-			print(pdfHandler.text)
-			############################# Conversion a voz #############################
-			engine = pyttsx3.init()
-			############################# Set voice #############################
-			# voices = engine.getProperty('voices')
-
-			# selected_voice_id = ''
-			# country = "Mexico"
-			# for voice in voices:
-			#     if country in voice.name:
-			#         # if gender != None:
-			#         #     selected_voice_id = voice[gender].id
-			#         # else:
-			#         selected_voice_id = voice.id
-
-			if rate != None:
-				engine.setProperty('rate', rate)
-
-			engine.setProperty('voice', voice_selected)
+		# ttsBuilder = TTSEngineBuilder(pdf_properties['rate'], pdf_properties['selected_voice'])
+		# engine = ttsBuilder.build_engine
 
 
-			############################# Generación del archivo de audio #############################
-			output_file = 'audio_tmp.mp3'
-			engine.save_to_file(text, output_file)
-			engine.runAndWait()
+		engine = pyttsx3.init()
+		############################# Set voice #############################
+		# voices = engine.getProperty('voices')
 
-			############################# Obteción de los bytes del archivo de audio para retornar #############################
+		# selected_voice_id = ''
+		# country = "Mexico"
+		# for voice in voices:
+		#     if country in voice.name:
+		#         # if gender != None:
+		#         #     selected_voice_id = voice[gender].id
+		#         # else:
+		#         selected_voice_id = voice.id
 
-			with open(f'./{output_file}', 'rb') as audio_tmp:
-				datos_de_audio = audio_tmp.read()
+		if pdf_properties['rate'] != None:
+			engine.setProperty('rate', pdf_properties['rate'])
 
-				response = HttpResponse(content_type= 'audio/mp3')
-				response['Content-Disposition'] = 'attachment; filename="file.mp3"'
+		engine.setProperty('voice', pdf_properties['selected_voice'])
 
-				response.content = datos_de_audio
 
-			# print(datos_de_audio)
-			# print(response)
+		############################# Generación del archivo de audio #############################
+		output_file = 'audio_tmp.mp3'
+		engine.save_to_file(text, output_file)
+		engine.runAndWait()
 
-			# return Response(audio_file, content_type='audio/mpeg')
+		############################# Obteción de los bytes del archivo de audio para retornar #############################
 
-			return response
-		# elif serializer_by_id.is_valid():
-		# 	print('se puede hacer de esta forma')
-		# 	print(serializer_by_id.validated_data['voice'])
-		else:
-			return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+		with open(f'./{output_file}', 'rb') as audio_tmp:
+			datos_de_audio = audio_tmp.read()
+
+			response = HttpResponse(content_type= 'audio/mp3')
+			response['Content-Disposition'] = 'attachment; filename="file.mp3"'
+
+			response.content = datos_de_audio
+
+		# print(datos_de_audio)
+		# print(response)
+
+		# return Response(audio_file, content_type='audio/mpeg')
+
+		return response
+
