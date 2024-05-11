@@ -1,26 +1,25 @@
-# from django.shortcuts import render
-from django.contrib.auth import get_user_model, login, logout
 from django.forms import ValidationError
-from django.shortcuts import render
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, permissions, viewsets
 from sasubook.forms import UploadPdfForm
 from sasubook.utils.auth.auth import create_token, get_payload, get_payload_from_GET_request
 
+from sasubook.utils.pdf.PdfControllerHelper import PdfControllerHelper
+from sasubook.utils.pdf.PyPdfHandler import PyPdfHandler
 from sasubook.utils.system_verifications import is_os_windows
+from sasubook.utils.tts.TTSEngineBuilder import TTSEngineBuilder
 from sasubook_api.settings import SECRET_KEY
 
 # from .serializer import UserSerializer, UserFileSerializer, UserRegisterSerializer, UserLoginSerializer
 from .serializers import AppUserSerializer, JWTSerializer, PDFByIdSerializer, UploadPdfSerializer, UserPdfFileSerializer
 # from .serializers import AppUserSerializer, UserSerializer, UserRegisterSerializer, UserLoginSerializer
 # from .models import User, UserFile
-from .validations import custom_validation, validate_email, validate_password
+from .validations import custom_validation
 
-from io import BytesIO
-import pypdf
 import pyttsx3
+
+from sasubook import serializers
 
 if is_os_windows():
 	import win32com.client
@@ -100,7 +99,12 @@ import jwt, datetime
 # Create your views here.
 class RegisterView(APIView):
 	def post(self, request):
-		serializer = AppUserSerializer(data=request.data)
+		try:
+			validated_data = custom_validation(request.data)
+		except ValidationError as e:
+			print(e.message)
+			return Response(data=e.message, status=status.HTTP_400_BAD_REQUEST)
+		serializer = AppUserSerializer(data=validated_data)
 		serializer.is_valid(raise_exception=True)
 		serializer.save()
 		response = Response()
@@ -122,10 +126,12 @@ class LoginView(APIView):
 		# print(f'id: {user.id}')
 
 		if user is None:
-			raise AuthenticationFailed('User not found!')
+			return Response(data="El email ingresado no se encuentra registrado en el sistema", status=status.HTTP_404_NOT_FOUND)
+			# raise AuthenticationFailed('User not found!')
 
 		if not user.check_password(password):
-			raise AuthenticationFailed('Incorrect password!')
+			return Response(data="Contraseña incorrecta", status=status.HTTP_400_BAD_REQUEST)
+			# raise AuthenticationFailed('Incorrect password!')	
 		
 		token = create_token(user)
 
@@ -179,7 +185,8 @@ class UserView(APIView):
 		try: 
 			payload = get_payload_from_GET_request(request)
 			# payload = get_payload(request)
-		except AuthenticationFailed:
+		except AuthenticationFailed as e:
+			return Response(data=e.detail)
 			raise AuthenticationFailed('Unauthenticated!')
 
 		# user = AppUser.objects.filter(id=payload['id']).first()
@@ -197,14 +204,7 @@ class LogoutView(APIView):
 		}
 		return response
 
-from .serializers import PDFSerializer
-from django.http import FileResponse, HttpResponse
-import json
-
-
-
-
-	
+from django.http import HttpResponse
 
 class UserFilesView(viewsets.ModelViewSet):
 	serializer_class = UserPdfFileSerializer
@@ -213,7 +213,7 @@ class UserFilesView(viewsets.ModelViewSet):
 def PdfUploadView(request):
 	print(request.method)
 	if request.method == 'POST':
-		print('entró por le post')
+		print('entró por el post')
 		form = UploadPdfForm(request.POST, request.FILES)
 		print('pasó la creación del form')
 		print(form)
@@ -291,7 +291,8 @@ class DeletePdfView(generics.DestroyAPIView): #Delete PDF by pdf's id, this also
 	def destroy(self, request, *args, **kwargs):
 		try:
 			payload = get_payload(self.request)
-		except AuthenticationFailed:
+		except AuthenticationFailed as e:
+			return Response(data=e.detail, status=status.HTTP_401_UNAUTHORIZED)
 			raise AuthenticationFailed('Unauthenticated!')
 		instance = self.get_object()
 		self.perform_destroy(instance)
@@ -329,195 +330,88 @@ class PdfFileView(viewsets.ModelViewSet): #retrieve all PDF's
 # 		if files is None:
 # 			raise AuthenticationFailed('Files not found!')
 # 		return Response(files)
-		
-
-	
 	
 class ConvertPDFToAudio(APIView):
-	def get_voices(self, *args, **kwargs):
-		engine = pyttsx3.init()
-		voices = engine.getProperty('voices')
-		# print(type(voices))
-		my_voices = list()
-		for voice in voices:
-			my_voices.append({"name": f'{voice.name}', "id": f'{voice.id}'})
-			# print(voice.name)
-		return json.dumps(my_voices)
-
-	def is_google_doc(self, metadata, *args, **kwargs):
-		return 'Google' in metadata.producer
-
 	def get(self, request, *args, **kwargs):
-
+		pdf_controller_helper = PdfControllerHelper(None)
 		response = HttpResponse(content_type='application/json')
-		response.content = self.get_voices()
+		response.content = pdf_controller_helper.get_voices()
 
 		return response
 
 	def post(self, request, *args, **kwargs):
 		try:
 			payload = get_payload(request)
-		except AuthenticationFailed:
-			raise AuthenticationFailed('Unauthenticated!')
+		except AuthenticationFailed as e:
+			print(e)			
+			return Response(data=e.detail, status=status.HTTP_401_UNAUTHORIZED)
+			# raise AuthenticationFailed('Unauthenticated!')
+  
+		# print(f'payload: {payload["id"]}')
 
-		# print(f'request: ')
-		# # token = request.COOKIES.get('jwt')
-		# jwtSerializer = JWTSerializer(data=request.data)
-		# if jwtSerializer.is_valid():
-	
-		# 	token = jwtSerializer.validated_data['jwt']
-		# 	print(token)
-
-		# 	if not token:
-		# 		raise AuthenticationFailed('Unauthenticated!')
-
-		# 	try:
-		# 		payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-		# 	except jwt.ExpiredSignatureError:
-		# 		raise AuthenticationFailed('Unauthenticated!')
-		print(f'payload: {payload["id"]}')
-		# print(request.data)
-		# print(request.data.pdf_id)
-
-		################ Definiendo si se envió el id o el archivo  ################
-		if request.POST.get('pdf_id'):
-			serializer = PDFByIdSerializer(data=request.data)
-			# print('entró por el POST.get')
-		else:
-			serializer = PDFSerializer(data=request.data)
-			# print('entró por el else del POST.get')
-		# print('pasó la creación del serializer')z
 		if is_os_windows():
 			xl=win32com.client.Dispatch("Excel.Application",pythoncom.CoInitialize())
+		
+		################ Obtengo los datos del pdf ################
+		try:
+			pdf_controller_helper = PdfControllerHelper(request=request)
+			pdf_file, pdf_properties = pdf_controller_helper.get_all_pdf_data().values()
+		except serializers.ValidationError as ex:
+			return Response(ex, status=status.HTTP_400_BAD_REQUEST)
 
-		if serializer.is_valid():
-			# print('serializer es válido')
-			################ Definiendo si debo buscar el pdf o si ya lo tengo  ################
-			if request.POST.get('pdf_id'):
-				filtered_pdf = PdfFile.objects.filter(id=serializer.validated_data['pdf_id']).first()
-				# print(PdfFile.objects.filter(id=serializer.validated_data['pdf_id']))
-				pdf_file = filtered_pdf.file
-				# print('entró por el POST.get dentro de la validación del serializer')
+		pdfHandler = PyPdfHandler(pdf_file, pdf_properties)
+		print(pdfHandler.to_page)
+		for propertys in pdf_properties:
+			print(propertys)
 
-			else:
-				pdf_serializer = PDFSerializer(data=request.data)
-				if pdf_serializer.is_valid():
-					pdf_file = pdf_serializer.validated_data['pdf']
-					# print('entró por el else del POST.get de la validación del serializer')
-			# print(serializer.validated_data['pdf_id'])
-			from_page = serializer.validated_data['from_page'] - 1
-			to_page = serializer.validated_data['to_page'] # no le resto uno porque el range es "hasta sin incluir"
-			rate = int(serializer.validated_data['rate'])
-			voice_selected = serializer.validated_data['voice']
+		############################# Extracción del texto #############################
+		text = pdfHandler.extract_text()
 
-			# print(from_page) # funciona
-			# print(to_page) # funciona
+		print(pdfHandler.text)
+		############################# Conversion a voz #############################
 
-			# savePdfSerializer = UserPdfFileSerializer(data=pdf_file)
-			# if savePdfSerializer.is_valid():
-			# 	savePdfSerializer.save()
-
-			pdf = pypdf.PdfReader(pdf_file)
+		# ttsBuilder = TTSEngineBuilder(pdf_properties['rate'], pdf_properties['selected_voice'])
+		# engine = ttsBuilder.build_engine
 
 
-			############################# Extracción del metadata #############################
-			meta = pdf.metadata
+		engine = pyttsx3.init()
+		############################# Set voice #############################
+		# voices = engine.getProperty('voices')
 
-			print(meta.producer)
+		# selected_voice_id = ''
+		# country = "Mexico"
+		# for voice in voices:
+		#     if country in voice.name:
+		#         # if gender != None:
+		#         #     selected_voice_id = voice[gender].id
+		#         # else:
+		#         selected_voice_id = voice.id
 
-			############################# Seteo de la página final #############################
-			if (to_page)  > len(pdf.pages):
-				to_page = len(pdf.pages)
-			text = str()
+		if pdf_properties['rate'] != None:
+			engine.setProperty('rate', pdf_properties['rate'])
 
-			# print(len(pdf.pages))
-
-			############################# Extracción del texto #############################
-			if from_page != None:
-				page_number = from_page
-
-				while page_number < to_page:
-					text += pdf.pages[page_number].extract_text().strip(' -•■□▢▣▤▥▦▧▨▩▪▫▬▭▮▯▰▱▲△▴▵▶▷▸▹►▻▼▽▾▿◀◁◂◃◄◅◆◇◈◉◊○◌◍◎●◐◑◒◓◔◕◖◗◘◙◚◛◜◝◞◟◠◡◢◣◤◥◦◧◨◩◪◫◬◭◮◯◰◱◲◳◴◵◶◷◸◹◺◻◼◽◾◿') #FUNCIONA
-					if self.is_google_doc(meta):
-						text = text.split()
-						text = ' '.join(text)
-
-					page_number += 1
-			else:
-				for page in pdf.pages:
-					# print(page.extract_text())
-					# text += page.extract_text() #FUNCIONA
-					text += page.extract_text().strip(' -•■□▢▣▤▥▦▧▨▩▪▫▬▭▮▯▰▱▲△▴▵▶▷▸▹►▻▼▽▾▿◀◁◂◃◄◅◆◇◈◉◊○◌◍◎●◐◑◒◓◔◕◖◗◘◙◚◛◜◝◞◟◠◡◢◣◤◥◦◧◨◩◪◫◬◭◮◯◰◱◲◳◴◵◶◷◸◹◺◻◼◽◾◿') #FUNCIONA
-					if self.is_google_doc(meta):
-						text = text.split()
-						text = ' '.join(text)
-
-			# print(text)  For Google Docs
-			text_array = text.split()
-			text_to_read = ' '.join(text_array)
-
-			# print(text_to_read)
-
-			text_worked = text.strip(' -•')
-			# text_worked = text_worked.replace('\n-', '\n' )
-			# text_worked = text_worked.replace('\n', ' \n' )
-			# # text_worked = text_worked.replace('.', '. \n' )
-			# # text_worked = text_worked.replace(' -', ', ' )
-			# text_worked = text_worked.replace(' -', ' ' )
-			# # text_worked = text_worked.replace('-', ',' )
-			# text_worked = text_worked.replace('-', '' )
-			# text_worked = text_worked.replace('V ', 'V' )
-			# text_worked = text_worked.replace(' ,', ' ' )
-			# text_worked = text_worked.replace(',.', '. ' )
-			# text_worked = text_worked.replace('.', '. ' )
+		engine.setProperty('voice', pdf_properties['selected_voice'])
 
 
+		############################# Generación del archivo de audio #############################
+		output_file = 'audio_tmp.mp3'
+		engine.save_to_file(text, output_file)
+		engine.runAndWait()
 
-			print(text_worked)
+		############################# Obteción de los bytes del archivo de audio para retornar #############################
 
-			############################# Conversion a voz #############################
-			engine = pyttsx3.init()
-			############################# Set voice #############################
-			# voices = engine.getProperty('voices')
+		with open(f'./{output_file}', 'rb') as audio_tmp:
+			datos_de_audio = audio_tmp.read()
 
-			# selected_voice_id = ''
-			# country = "Mexico"
-			# for voice in voices:
-			#     if country in voice.name:
-			#         # if gender != None:
-			#         #     selected_voice_id = voice[gender].id
-			#         # else:
-			#         selected_voice_id = voice.id
+			response = HttpResponse(content_type= 'audio/mp3')
+			response['Content-Disposition'] = 'attachment; filename="file.mp3"'
 
-			if rate != None:
-				engine.setProperty('rate', rate)
+			response.content = datos_de_audio
 
-			engine.setProperty('voice', voice_selected)
+		# print(datos_de_audio)
+		# print(response)
 
+		# return Response(audio_file, content_type='audio/mpeg')
 
-			############################# Generación del archivo de audio #############################
-			output_file = 'audio_tmp.mp3'
-			engine.save_to_file(text_to_read, output_file)
-			engine.runAndWait()
+		return response
 
-			############################# Obteción de los bytes del archivo de audio para retornar #############################
-
-			with open(f'./{output_file}', 'rb') as audio_tmp:
-				datos_de_audio = audio_tmp.read()
-
-				response = HttpResponse(content_type= 'audio/mp3')
-				response['Content-Disposition'] = 'attachment; filename="file.mp3"'
-
-				response.content = datos_de_audio
-
-			# print(datos_de_audio)
-			# print(response)
-
-			# return Response(audio_file, content_type='audio/mpeg')
-
-			return response
-		# elif serializer_by_id.is_valid():
-		# 	print('se puede hacer de esta forma')
-		# 	print(serializer_by_id.validated_data['voice'])
-		else:
-			return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
