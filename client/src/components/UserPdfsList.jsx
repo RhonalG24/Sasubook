@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import { useContext, useEffect, useState } from "react"
 // import { getAllUsers } from '../api/users.api'
 import { getPdfByUserId } from "../api/usersFiles.api"
