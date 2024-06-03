@@ -1,100 +1,19 @@
 from django.forms import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status, permissions, viewsets
+from rest_framework import status, viewsets
+from rest_framework.exceptions import AuthenticationFailed
+
 from sasubook.forms import UploadPdfForm
+from sasubook.handlers.ConvertPDFToAudioHandler import ConvertPDFToAudioHandler
 from sasubook.utils.auth.auth import create_token, get_payload, get_payload_from_GET_request
-
 from sasubook.utils.pdf.PdfControllerHelper import PdfControllerHelper
-from sasubook.utils.pdf.PyPdfHandler import PyPdfHandler
-from sasubook.utils.system_verifications import is_os_windows
-from sasubook.utils.tts.TTSEngineBuilder import TTSEngineBuilder
 from sasubook_api.settings import SECRET_KEY
-
-# from .serializer import UserSerializer, UserFileSerializer, UserRegisterSerializer, UserLoginSerializer
-from .serializers import AppUserSerializer, JWTSerializer, PDFByIdSerializer, UploadPdfSerializer, UserPdfFileSerializer
-# from .serializers import AppUserSerializer, UserSerializer, UserRegisterSerializer, UserLoginSerializer
-# from .models import User, UserFile
-from .validations import custom_validation
-
-import pyttsx3
-
 from sasubook import serializers
 
-if is_os_windows():
-	import win32com.client
-	import pythoncom
-
-# Create your views here.
-
-# class UserRegister(APIView):
-#     permission_classes = (permissions.AllowAny,)
-#     ##
-#     def post(self, request):
-#         validate_data = custom_validation(request.data)
-#         serializer = UserRegisterSerializer(data=validate_data)
-#         if serializer.is_valid(raise_exception=True):
-#             user = serializer.create(validate_data)
-#             if user:
-#                 return Response(serializer.data, status= status.HTTP_201_CREATED)
-#             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-# class UserLogin(APIView):
-#     permission_classes = (permissions.AllowAny,)
-#     authentication_classes = (SessionAuthentication,)
-#     ##
-#     def post(self, request):
-#         data = request.data
-#         assert validate_email(data)
-#         assert validate_password(data)
-#         serializer = UserLoginSerializer(data=data)
-#         if serializer.is_valid(raise_exception=True):
-#             try:
-#                 user = serializer.check_user(data)
-#             # try:
-#             except ValidationError as e:
-#                 return Response(e.message, status=status.HTTP_400_BAD_REQUEST)
-
-#             else:
-#                 login(request, user)
-#                 return Response(serializer.data, status=status.HTTP_200_OK)
-#             # except Exception as e:
-#             #     return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
-#             # # return Response(user, status=status.HTTP_200_OK)
-#             # else:
-#             #     return Response(serializer.data, status=status.HTTP_200_OK)
-
-# class UserLogout(APIView):
-#     permission_classes = (permissions.AllowAny,)
-#     authentication_classes = ()
-#     ##
-#     def post(self, request):
-#         logout(request)
-#         return Response(status=status.HTTP_200_OK)
-
-# class UserView(APIView):
-#     permission_classes = (permissions.IsAuthenticated,)
-#     authentication_classes = (SessionAuthentication, )
-#     ##
-#     def get(self, request):
-#         serializer = UserSerializer(request.user)
-#         return Response({'user': serializer.data}, status=status.HTTP_200_OK)
-
-# class UserView(viewsets.ModelViewSet):
-#     serializer_class = UserSerializer
-#     queryset = User.objects.all()
-
-# class UserFilesView(viewsets.ModelViewSet):
-#     serializer_class = UserFileSerializer
-#     queryset = UserFile.objects.all()
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
-# from .serializers import UserSerializer
+from .serializers import AppUserSerializer, UploadPdfSerializer, UserPdfFileSerializer
+from .validations import custom_validation 
 from .models import AppUser, PdfFile, UserPdfFile
-import jwt, datetime
-
 
 # Create your views here.
 class RegisterView(APIView):
@@ -340,78 +259,14 @@ class ConvertPDFToAudio(APIView):
 		return response
 
 	def post(self, request, *args, **kwargs):
-		try:
-			payload = get_payload(request)
-		except AuthenticationFailed as e:
-			print(e)			
-			return Response(data=e.detail, status=status.HTTP_401_UNAUTHORIZED)
-			# raise AuthenticationFailed('Unauthenticated!')
-  
-		# print(f'payload: {payload["id"]}')
-
-		if is_os_windows():
-			xl=win32com.client.Dispatch("Excel.Application",pythoncom.CoInitialize())
 		
-		################ Obtengo los datos del pdf ################
 		try:
-			pdf_controller_helper = PdfControllerHelper(request=request)
-			pdf_file, pdf_properties = pdf_controller_helper.get_all_pdf_data().values()
-		except serializers.ValidationError as ex:
-			return Response(ex, status=status.HTTP_400_BAD_REQUEST)
-
-		pdfHandler = PyPdfHandler(pdf_file, pdf_properties)
-		print(pdfHandler.to_page)
-		for propertys in pdf_properties:
-			print(propertys)
-
-		############################# Extracción del texto #############################
-		text = pdfHandler.extract_text()
-
-		print(pdfHandler.text)
-		############################# Conversion a voz #############################
-
-		# ttsBuilder = TTSEngineBuilder(pdf_properties['rate'], pdf_properties['selected_voice'])
-		# engine = ttsBuilder.build_engine
-
-
-		engine = pyttsx3.init()
-		############################# Set voice #############################
-		# voices = engine.getProperty('voices')
-
-		# selected_voice_id = ''
-		# country = "Mexico"
-		# for voice in voices:
-		#     if country in voice.name:
-		#         # if gender != None:
-		#         #     selected_voice_id = voice[gender].id
-		#         # else:
-		#         selected_voice_id = voice.id
-
-		if pdf_properties['rate'] != None:
-			engine.setProperty('rate', pdf_properties['rate'])
-
-		engine.setProperty('voice', pdf_properties['selected_voice'])
-
-
-		############################# Generación del archivo de audio #############################
-		output_file = 'audio_tmp.mp3'
-		engine.save_to_file(text, output_file)
-		engine.runAndWait()
-
-		############################# Obteción de los bytes del archivo de audio para retornar #############################
-
-		with open(f'./{output_file}', 'rb') as audio_tmp:
-			datos_de_audio = audio_tmp.read()
-
+			handler = ConvertPDFToAudioHandler()
 			response = HttpResponse(content_type= 'audio/mp3')
 			response['Content-Disposition'] = 'attachment; filename="file.mp3"'
-
-			response.content = datos_de_audio
-
-		# print(datos_de_audio)
-		# print(response)
-
-		# return Response(audio_file, content_type='audio/mpeg')
-
-		return response
+			response.content = handler.ConvertPDFToAudioByRequest(request=request)
+			return response
+		except ExceptionGroup("Hubo un error", [AuthenticationFailed, serializers.ValidationError, Exception]) as e:
+			return Response(data=e.detail, status=status.HTTP_401_UNAUTHORIZED)
+	
 

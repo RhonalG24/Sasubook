@@ -2,16 +2,19 @@ import pyttsx3
 from sasubook.utils.tts.TTSEngineBuilder import TTSEngineBuilder
 
 class PyTTSx3EngineBuilder(TTSEngineBuilder):
-    def __init__(self) -> None:
+    def __init__(self, properties):
+        self.init_engine()
+        self.set_rate(properties['rate'])
+        self.set_voice(properties['selected_voice'])
         super().__init__()
     
-    # @property
-    # def engine(self):
-    #     return self.__engine
+    @property
+    def engine(self):
+        return self.__engine
 
-    # @engine.setter
-    # def engine(self, engine):
-    #     self.engine = engine    
+    @engine.setter
+    def engine(self, engine):
+        self.engine = engine    
     
     def init_engine(self):
         self.__engine = pyttsx3.init()
