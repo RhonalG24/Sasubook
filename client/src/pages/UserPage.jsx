@@ -1,35 +1,12 @@
-import axios from 'axios';
 import { getMyUser } from '../api/user.api';
-import { storage } from '../utils/storage';
-import { useState, useEffect, useContext } from 'react';
-import { get } from 'react-hook-form';
+import { useEffect, useContext } from 'react';
 import { show_error_toast } from '../utils/myToast';
 import UserContext from '../contexts/UserContext';
-
-// async function getUser(){
-//     const formData = new FormData();
-//     formData.append('jwt', storage.get('auth'))
-//     const csrftoken = storage.getcookie('csrftoken')
-    
-//     const response = await axios.get(
-//         'http://localhost:8000/sasubook/user/', 
-//         {"jwt": storage.get('auth')}, 
-//         {   
-//             responseType: 'blob', 
-//             // headers: {'content-type': 'multipart/form-data', 'X-CSRFToken': storage.getcookie('csrftoken')},
-//             headers: { 'X-CSRFToken': csrftoken},
-//             withCredentials: true
-//         } 
-//     )
-
-//     return response.data
-
-// }
 
 
 export function UserPage(){
     // const [ user, setUser ] = useState({})
-    const { id, setId, name, setName, user, setUser, email } = useContext(UserContext)
+    const { name } = useContext(UserContext)
     // const jwt = storage.get('auth')
     useEffect( () => {
         async function getUser(){

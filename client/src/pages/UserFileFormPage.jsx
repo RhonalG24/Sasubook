@@ -1,10 +1,10 @@
+/* eslint-disable react/no-unescaped-entities */
 import { useContext, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { uploadPdfFile, convertPDFToAudio, getVoices, getPdfByUserId } from '../api/usersFiles.api'
 import toast from 'react-hot-toast'
 import UserContext from '../contexts/UserContext'
 
-// import { useNavigate, useParams } from 'react-router-dom'
 
 export function UserFileFormPage(){
 
@@ -14,8 +14,6 @@ export function UserFileFormPage(){
 
     const { id } = useContext(UserContext)
     const [ pdfs, setPdfs ] = useState([])
-    // const navigate = useNavigate()
-    // const params = useParams()
 
     useEffect( () => {
         async function loadFileOptions() {
