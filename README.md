@@ -82,6 +82,54 @@ Para entrar a la pagína de administrador de Django para editar usuarios se pued
   Opción 1: Ejecutar el archivo launch_sasubook_admin.bat
   Opción 2: Abrir en el navegador de tu preferencia la url [admin](http://localhost:8000/admin/) **después de haber ejecutado el archivo launch_sasubook.bat**
 
+## Agregar nuevas voces al programa
+
+El programa utiliza las voces instaladas en el sistema operativo.
+
+### Usuarios Windows
+Para instalar nuevas voces en el sistema operativo siga las instrucciones de la página oficial del [Windows](https://support.microsoft.com/es-es/windows/ap%C3%A9ndice-a-idiomas-y-voces-compatibles-4486e345-7730-53da-fcfe-55cc64300f01)
+
+Para agregar nuevas voces al programa se debe agregar la voz escogida (dentro de las instaladas en Windows) al archivo de registros de Windows. Para ello se debe hacer lo siguiente:
+
+1. Presionar en el teclado la tecla Windows + r
+2. Escriba "regedit" y presione la tecla Enter
+3. Expanda Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech_OneCore\Voices\Tokens\ 
+4. Una vez en este directorio se podrán observar todas las voces instaladas en el sistema operativo. Se debe hacer click derecho sobre el archivo de voz que se desea, por ejemplo "MSTTS_V110_esES_LauraM". Luego click en "Exportar" y seleccione su carpeta de voces de preferencia para guardar el archivo exportado. 
+5. Abra el archivo exportado en un editor de texto y reemplace "Speech_OneCore" con "Speech" en todo el archivo y guarde los cambios.
+Por ejemplo: el archivo MSTTS_V110_esES_LauraM es así:
+```
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech_OneCore\Voices\Tokens\MSTTS_V110_esES_LauraM]
+@="Microsoft Laura - Spanish (Spain)"
+"C0A"="Microsoft Laura - Spanish (Spain)"
+[...]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech_OneCore\Voices\Tokens\MSTTS_V110_esES_LauraM\Attributes]
+"Age"="Adult"
+[...]
+
+```
+
+Y después del cambio debe quedar así:
+
+```
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\MSTTS_V110_esES_LauraM]
+@="Microsoft Laura - Spanish (Spain)"
+"C0A"="Microsoft Laura - Spanish (Spain)"
+[...]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\MSTTS_V110_esES_LauraM\Attributes]
+"Age"="Adult"
+[...]
+
+```
+6. Haga doble click en el archivo editado. Esto abrirá una ventana del Editor de Registros, presione "Sí". Cuando le pregunte si está seguro de que desea continua presione "Sí" nuevamente para agregar el archivo. Cuando le diga que el archivo se ha agregado al registro presione "OK".
+
+Con esto puede iniciar nuevamente la aplicación y verá la nueva voz en el listado de voces disponibles.
+
 ## Beneficios esperados del proyecto
 1. Acceso equitativo a la información: La herramienta de conversión de texto a audio abrirá las puertas del conocimiento a aquellas personas que enfrentan barreras para la lectura, facilitando el acceso a la información y favoreciendo la inclusión social. 
 2. Optimización del tiempo: Las personas que cuentan con una agenda ocupada podrán aprovechar tiempos muertos, como desplazamientos, para escuchar información relevante a través de archivos de audio, maximizando así su tiempo y permitiéndoles mantenerse actualizados en sus áreas de interés. 
