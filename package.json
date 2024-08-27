@@ -8,6 +8,9 @@
     "sasubook": "electron .",
     "admin": "electron index_admin.js"
   },
+  "win": {
+    "icon": "./client/public/SasuBook-Logo.png"
+  },
   "author": "rhonalgnzl@gmail.com",
   "license": "ISC",
   "dependencies": {
