@@ -11,6 +11,10 @@ call sasubook-env/Scripts/activate
 echo Collecting packages to install...
 
 @REM Instalar las dependencias desde requirements.txt
+pip install setuptools
+
+pip install --upgrade setuptools
+
 pip install -r requirements.txt
 
 python manage.py makemigrations
